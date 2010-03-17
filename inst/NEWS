@@ -1,0 +1,24 @@
+Package: spikeslab
+Version: 1.0.0
+BUILD: bld20100317
+
+---------------------------------------------------------------------------------
+CHANGES TO RELEASE 1.0.0
+
+RELEASE 1.0.0 is the first and initial release of this package.
+
+Fits a rescaled spike and slab model using a continuous bimodal
+prior. Can be used for prediction and variable selection in low and
+high-dimensional linear regression models.
+
+Key features include:
+
+o Option for ultra-fast handling of high-dimensional data.
+o Variable selection using the generalized elastic net (gnet).
+o Grouping of variables with unique regularization (no limit on the number).
+o Predict wrapper for predicting on test data.
+o Sparse PC approach for multiclass analysis of gene expression data.
+o Depends on the randomForest and lars R-packages.
+
+
+---------------------------------------------------------------------------------

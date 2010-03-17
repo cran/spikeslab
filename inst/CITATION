@@ -1,0 +1,51 @@
+citHeader("To cite spikeslab in publications use:")
+
+titl <- meta$Title
+year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
+vers <- paste("R package version", meta$Version)
+
+citEntry(entry="Manual",
+         title = titl,
+         author = personList(person(last="Ishwaran", first="H."),
+	                     person(last="Rao", first="J.S."),
+	                     person(last="Kogalur", first="U.B.")),
+	 publisher = "manual",
+         year         = year,
+         note         = vers,
+         url          = "http://cran.r-project.org/web/packages/spikeslab/",
+         pdf          = "http://cran.r-project.org/web/packages/spikeslab/spikeslab.pdf",
+         textVersion = 
+         paste("Ishwaran H., Rao J.S. and Kogalur U.B. (",year ,"). ", 
+               titl, ", ", vers, ".", sep=""))
+
+citEntry(entry="Article",
+         title  = "Spike and slab variable selection: frequentist and Bayesian strategies",
+         author = personList(person(last="Ishwaran", first="H."),
+                             person(last="Rao", first="J.S.")),
+	 journal      = "Ann. Statist.",
+         year         = "2005",
+         volume       = "33",
+         number       = "2",
+         pages        = "730--773",
+         url          = "http://arXiv.org/abs/math/0505633v1",
+         pdf          = "http://arxiv.org/pdf/math.ST/0505633",
+
+         textVersion = 
+         paste("Ishwaran H. and Rao J.S. (2005). ", 
+               "Spike and slab variable selection: frequentist and Bayesian strategies.",
+               "Ann. Statist. 33(2), 730--773.",
+               sep=""))
+
+citEntry(entry="Article",
+         title  = "Generalized ridge regression: geometry and computational solutions when p is larger than n",
+         author = personList(person(last="Ishwaran", first="H."),
+                             person(last="Rao", first="J.S.")),
+	 journal      = "Manuscript",
+         year         = "2010",
+
+         textVersion = 
+         paste("Ishwaran H. and Rao J.S. (2010). ", 
+               "Generalized ridge regression: geometry and computational solutions when p is larger than n.",
+               "Manuscript.",
+               sep=""))
+ 

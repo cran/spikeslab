@@ -1,0 +1,12 @@
+useDynLib(spikeslab)
+
+export(spikeslab.news, 
+       spikeslab,
+       predict.spikeslab,
+       print.spikeslab,
+       sparsePC,
+       sparsePC.spikeslab,
+       cv.spikeslab)
+
+S3method(predict, spikeslab)
+S3method(print, spikeslab)

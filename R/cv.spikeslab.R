@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.0.0
+####  SPIKE AND SLAB 1.0.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -137,12 +137,12 @@ for (k in 1:K) {
                      ntree = ntree, seed = seed)
   #test data prediction
   pred.obj <- predict(obj, as.matrix(x[omit,, drop = FALSE])) 
-  yhat.k <- pred.obj$yhat.gnet 
+  yhat.k <- pred.obj$yhat.gnet
   yhat.path.k <- pred.obj$yhat.gnet.path
   gnet.path.k <- obj$gnet.path$path
   #lars should only return steps 0, ..., p; yet there seems to be ties
   #apply an ad-hoc beta-breaker here
-  model.size.k <- apply(gnet.path.k, 1, function(sbeta){sum(abs(sbeta) > .Machine$double.eps)})
+  model.size.k <- apply(gnet.path.k, 1, function(sbeta){sum(abs(sbeta) > .Machine$double.eps, na.rm = TRUE)})
   beta.break.k <- which(!duplicated(model.size.k))
   model.size[k] <- max(model.size.k)
   if (length(beta.break.k) > 0) {
@@ -168,20 +168,20 @@ for (k in 1:K) {
   cv.plot.path[1:length(cv.path[[k]]), k] <- cv.path[[k]]
 }
 cv.plot.mean <- apply(cv.plot.path, 1, mean, na.rm = TRUE)
-cv.plot.error <- apply(cv.plot.path, 1, SD)/sqrt(K)
+cv.plot.se <- apply(cv.plot.path, 1, SD)/sqrt(K)
 
 ## plot it
 if (plot.it) {
-  matplot(0:p, cv.plot.path, type = c("l", "n")[1 + 1 * (K > 20)], lty = 3, col = "gray", lwd = 0.05,
+  matplot(0:p, cv.plot.path, type = c("l", "n")[1 + 1 * (K > 20)], lty = 3, col = "gray", 
          xlim = range(c(0, model.size), na.rm = TRUE),
-         ylim = range(c(cv.plot.path, cv.plot.mean + cv.plot.error,
-            cv.plot.mean - cv.plot.error), na.rm = TRUE),
+         ylim = range(c(cv.plot.path, cv.plot.mean + cv.plot.se,
+            cv.plot.mean - cv.plot.se), na.rm = TRUE),
          xlab="Model Size", ylab="Cross-Validated MSE")
   lines(0:p, cv.plot.mean, lty = 1, lwd = 2, col = 4)
-  error.bars(0:p, cv.plot.mean + cv.plot.error, cv.plot.mean - cv.plot.error, width = 0.0025, col = 2)
+  error.bars(0:p, cv.plot.mean + cv.plot.se, cv.plot.mean - cv.plot.se, width = 0.0025, col = 2)
 }
 
-# stability analysis; get it pretty for the return
+# stability analysis; make it pretty for the return
 tally.stability <- cbind(primary.obj$gnet,
                          apply(gnet.path, 2, mean, na.rm = TRUE) * obj$x.scale,
                          primary.obj$gnet.scale,
@@ -191,6 +191,32 @@ colnames(tally.stability) <- c("gnet", "gnet.cv", "gnet.scale", "gnet.scale.cv",
 rownames(tally.stability) <- varnames
 tally.stability <- tally.stability[order(tally.stability[, 5], abs(tally.stability[, 1]),
                           decreasing = TRUE),, drop = FALSE]
+
+# pretty details for terminal output
+get.model.size <- function(mn, se) {
+  ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
+  mn.upper <- mn[ms.upper]
+  ms.range <- which((mn + se >= mn.upper) & (mn - se <= mn.upper))
+  ms.lower <- min(ms.range)
+  ms.all <- unique(c(ms.lower, ms.upper))
+  if (length(ms.all) == 1) return(ms.all)
+  paste("[", ms.lower, ",", ms.upper, "]", sep = "")
+}
+if (verbose){
+cat("-------------------------------------------------------------------","\n")
+cat("Big p small n                 :",bigp.smalln,"\n")
+cat("Screen variables              :",screen,"\n")
+cat("Fast processing               :",fast,"\n")
+cat("Sample size                   :",nrow(x),"\n")
+cat("No. predictors                :",ncol(x),"\n")
+cat("No. burn-in values            :",n.iter1,"\n")
+cat("No. sampled values            :",n.iter2,"\n")
+cat("K-fold                        :",K,"\n")
+cat("CV mean-squared error         :", paste(round(mean(cv, na.rm = TRUE), 3) , "+/-",
+                                         round(sd(cv, na.rm = TRUE)/sqrt(K), 3), "\n"))
+cat("Model size                    :",get.model.size(cv.plot.mean, cv.plot.se), "\n")
+cat("-------------------------------------------------------------------","\n")
+}
 
 #return the goodies
 object <- list(cv = cv, cv.path = cv.plot.path, stability = tally.stability,

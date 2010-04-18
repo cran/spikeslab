@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.0.0
+####  SPIKE AND SLAB 1.0.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -83,7 +83,7 @@ print.spikeslab <- function(x, ...)
 
   ### Check that object is compatible
   if (!inherits(x,"spikeslab"))
-     stop("This function only works for objects of class `spikeNslab'")
+     stop("This function only works for objects of class `spikeslab'")
 
   ### extract summary data
   verbose <- x$verbose

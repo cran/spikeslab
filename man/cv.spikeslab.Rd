@@ -43,9 +43,11 @@ cv.spikeslab(x = NULL, y = NULL, K = 10, plot.it = TRUE,
 }
 \value{
      Invisibly returns a list with components:
-     \item{cv}{A vector of mean-squared errors for the gnet.}
-     \item{cv.path}{A matrix of mean-squared errors for the gnet solution path.}
-     \item{stability}{Stability analysis for each variable.}
+     \item{cv}{K-dimensional vector of mean-squared errors for the gnet.}
+     \item{cv.path}{A matrix of mean-squared errors for the gnet
+       solution path.  Rows correspond to model sizes, columns are the folds.}
+     \item{stability}{Stability for each variable defined as the
+       percentage of times a variable is identified over the K-folds.}
      \item{gnet.path}{gnet path from the full data, scaled in terms of the original x.}
      \item{gnet.obj}{gnet object from fitting the full data (a lars-type object).}
 }

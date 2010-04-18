@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.0.0
+####  SPIKE AND SLAB 1.0.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -86,7 +86,7 @@ predict.spikeslab <- function(object, newdata = NULL, ...)
  ### check for newdata
 
   if (!inherits(object,"spikeslab"))
-     stop("This function only works for objects of class `spikeNslab'")
+     stop("This function only works for objects of class `spikeslab'")
   if (is.null(newdata)) stop("need to supply test data")
   
  ### --------------------------------------------------------------

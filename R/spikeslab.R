@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.0.2
+####  SPIKE AND SLAB 1.0.3
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -336,7 +336,7 @@ else {
       nozap.pt <- nozap.new.pt[1:max.bigp.cov]
     }
     ### re-adjust r.eff for variable screening
-    if (!is.null(r.eff)) {
+    if (!is.null(r.eff) & (length(nozap.pt) > 0)) {
       n.reff <- 0
       r.eff <- vector("list", 0)
       r.eff.names <- NULL
@@ -380,7 +380,7 @@ else {
     phat.bma <- sum(abs(b.m) > eps, na.rm = TRUE)
     penal <- rep(Inf, n.cov)
     resid <- rep(0, n.cov)
-    if (sum(nozap.pt) > 0) {
+    if (length(nozap.pt) > 0) {
       resid[nozap.pt] <- (sum.xy.wrk[nozap.pt] - XX.wrk.reduced %*% b.m[nozap.pt])
       penal[nozap.pt] <- resid[nozap.pt] / b.m[nozap.pt]
     }
@@ -441,7 +441,7 @@ else {
 ### --------------------------------------------------------------
 
 if (verbose) cat("\t using generalized enet to select variables...                \r")
-if (sum(nozap.pt) > 0) {
+if (length(nozap.pt) > 0) {
   penal.constant <- mean(abs(resid[nozap.pt]), na.rm = TRUE)
   penal <-  (sqrt(n.data) * abs(penal))  / penal.constant
   #adjust penalty constant if random effects present)
@@ -561,6 +561,7 @@ out <- list(
        gnet.scale=gnet.scale,                  #rescaled bma coefficients
        gnet.path=gnet.path,                    #gnet full solution path
        gnet.obj=gnet.obj,                      #gnet object (lars type)
+       gnet.parms=penal,                       #grr parameters used to define gnet
        phat=phat,                              #estimated dimension
        complexity=complexity.vec               #complexity estimates
        )

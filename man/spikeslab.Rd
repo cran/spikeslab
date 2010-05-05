@@ -60,9 +60,10 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
     \code{n} times \code{bigp.smalln.factor} ones.  Uses spike and slab
     regression with grouped regularization (complexity) parameters.
   
-    (2) BMA STEP.  Refit the model using only those predictors from STEP
-    1.  Returns the posterior mean values from fitting a spike and slab
-    model, refered to as the Bayesian model averaged (BMA) estimates.
+    (2) MODEL AVERAGING STEP.  Refit the model using only those
+    predictors from STEP 1.  Returns the posterior mean values from
+    fitting a spike and slab model; referred to as the Bayesian model
+    averaged (bma) estimate.
     
     (3) VARIABLE SELECTION STEP.  Select variables using the generalized
     elastic net (gnet).
@@ -123,12 +124,14 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
      \item{x.center}{Centering for original x matrix.}
      \item{x.scale}{Scaling for original x matrix.}
      \item{names}{Variable names.}
-     \item{bma}{BMA coefficients in terms of the standardized x.}
-     \item{bma.scale}{BMA coefficients scaled in terms of the original x.}
+     \item{bma}{bma coefficients in terms of the standardized x.}
+     \item{bma.scale}{bma coefficients scaled in terms of the original x.}
      \item{gnet}{gnet coefficients in terms of the standardized x.}
      \item{gnet.scale}{gnet coefficients scaled in terms of the original x.}
      \item{gnet.path}{gnet path scaled in terms of the original x.}
      \item{gnet.obj}{gnet object (a lars-type object).}
+     \item{gnet.parms}{Generalized ridge regression parameters used to
+       define the gnet.}
      \item{phat}{Estimated model dimension.}
      \item{complexity}{Complexity (regularization) parameter estimates.}
 }
@@ -180,6 +183,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
 data(diabetesI, package = "spikeslab")
 obj <- spikeslab(Y ~ . , diabetesI, verbose=TRUE)
 print(obj)
+plot(obj$gnet.obj)#the gnet object is interpretable by lars()
 
 # grouping effect
 # separate main effects and interactions into two groups

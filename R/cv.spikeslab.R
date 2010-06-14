@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.0.3
+####  SPIKE AND SLAB 1.1.0
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -82,6 +82,7 @@ cv.spikeslab <- function(
  x=NULL,              #x matrix
  y=NULL,              #y response
  K=10,                #K-fold
+ parallel=FALSE,      #parallel processing via snow
  plot.it=TRUE,        #plot cv
  n.iter1=500,         #no. burn-in samples
  n.iter2=500,         #no. Gibbs sampled values (following burn-in)
@@ -107,25 +108,22 @@ if (length(unique(colnames(x))) != ncol(x)) {
     colnames(x) <- paste("x.", 1:ncol(x), sep = "")
 }
   
-#primary call
-primary.obj <- spikeslab(x = x, y = y,
-                 n.iter1 = n.iter1, n.iter2 = n.iter2,
-                 mse = mse, bigp.smalln = bigp.smalln,
-                 bigp.smalln.factor = bigp.smalln.factor,
-                 screen = screen, r.effects = r.effects,
-                 max.var = max.var, center = center, intercept = intercept,
-                 fast = fast, beta.blocks = beta.blocks, verbose = FALSE,
-                 ntree = ntree, seed = seed)
-varnames <- primary.obj$names
-p <- length(varnames)
-cv <- model.size <- rep(NA, K)
-cv.path <- list(length = K)
-gnet.path <- stability <- matrix(0, K, p)
+# define the folds
+# last fold is the full data and corresponds to the "primary object"
 all.folds <-  split(sample(1:nrow(x)), rep(1:K, length = nrow(x)))
+K <- length(all.folds)
+all.folds[[K+1]] <- nrow(x) + 1
 
-#cross-validation loop
-for (k in 1:K) {
-  if (verbose) cat("\t K-fold:", k, "\n")
+#core cv function
+eval.fold <- function(k, ...) {
+  if (verbose) {
+    if (k <= K) {
+      cat("\t K-fold:", k, "\n")
+    }
+    else {
+      cat("\t final analysis (full-data)\n")
+    }
+  }
   omit <- all.folds[[k]]
   obj <- spikeslab(x = as.matrix(x[-omit,, drop = FALSE]), y = y[-omit],
                      n.iter1 = n.iter1, n.iter2 = n.iter2,
@@ -135,38 +133,92 @@ for (k in 1:K) {
                      max.var = max.var, center = center, intercept = intercept,
                      fast = fast, beta.blocks = beta.blocks, verbose = FALSE,
                      ntree = ntree, seed = seed)
-  #test data prediction
-  pred.obj <- predict(obj, as.matrix(x[omit,, drop = FALSE])) 
-  yhat.k <- pred.obj$yhat.gnet
-  yhat.path.k <- pred.obj$yhat.gnet.path
-  gnet.path.k <- obj$gnet.path$path
-  #lars should only return steps 0, ..., p; yet there seems to be ties
-  #apply an ad-hoc beta-breaker here
-  model.size.k <- apply(gnet.path.k, 1, function(sbeta){sum(abs(sbeta) > .Machine$double.eps, na.rm = TRUE)})
-  beta.break.k <- which(!duplicated(model.size.k))
-  model.size[k] <- max(model.size.k)
-  if (length(beta.break.k) > 0) {
-    gnet.path.k <- as.matrix(gnet.path.k[beta.break.k, ])
-    yhat.path.k <- as.matrix(yhat.path.k[, beta.break.k])
-    #cv calculations
-    cv[k] <- mean((y[omit] - yhat.k)^2, na.rm = TRUE)
-    cv.path[[k]] <- colMeans((y[omit] - yhat.path.k)^2, na.rm = TRUE)
-    gnet.k <- gnet.path.k[which(cv.path[[k]] == min(cv.path[[k]]))[1], ]
+  if (k <= K) {
+    #test-set prediction
+    pred.obj <- predict(obj, as.matrix(x[omit,, drop = FALSE])) 
+    yhat.k <- pred.obj$yhat.gnet
+    yhat.path.k <- pred.obj$yhat.gnet.path
+    gnet.path.k <- obj$gnet.path$path
+    #lars should only return steps 0, ..., p; yet there seems to be ties
+    #apply an ad-hoc beta-breaker here
+    model.size.k <- apply(gnet.path.k, 1,
+             function(sbeta){sum(abs(sbeta) > .Machine$double.eps, na.rm = TRUE)})
+    beta.break.k <- which(!duplicated(model.size.k))
+    if (length(beta.break.k) > 0) {
+      gnet.path.k <- as.matrix(gnet.path.k[beta.break.k, ])
+      yhat.path.k <- as.matrix(yhat.path.k[, beta.break.k])
+      #test-set error
+      cv.k <- mean((y[omit] - yhat.k)^2, na.rm = TRUE)
+      cv.path.k <- colMeans((y[omit] - yhat.path.k)^2, na.rm = TRUE)
+      gnet.k <- gnet.path.k[which(cv.path.k == min(cv.path.k))[1], ]
+    }
+    else {
+      cv.path.k <- cv.k <- mean((y[omit] - mean(y[-omit]))^2, na.rm = TRUE)
+      gnet.k <- rep(0, length(obj$names))
+    }
+    return(list(model.size.k = model.size.k,
+              cv.k = cv.k,
+              cv.path.k = cv.path.k,
+              gnet.k = gnet.k,
+              names = obj$names))
   }
   else {
-    cv.path[[k]] <- cv[k] <- mean((y[omit] - mean(y[-omit]))^2, na.rm = TRUE)
-    gnet.k <- rep(0, length(obj$names))
+    return(list(obj = obj))
   }
-  #determine the optimal model; update stability
-  gnet.path[k, is.element(varnames, obj$names)] <- gnet.k
-  stability[k, is.element(varnames, obj$names)] <- 1 * (abs(gnet.k) >  .Machine$double.eps)
 }
 
-## convert mse into matrix format more conducive for plotting/printing
+## Determine if parallel processing is to be done.
+if (parallel) {
+ if (!require(snow, quietly = TRUE)) {
+     warning("package 'snow' not found, i.e., parallel processing was not performed")
+     eval.fold.obj <- lapply(1:(K+1), eval.fold, ...)
+  }   
+  else {
+    ## The default number of threads is two (2).
+    if (parallel == TRUE) {
+      parallel <- 2
+    }
+    cl <- makeSOCKcluster(rep("localhost", as.integer(parallel)))
+
+    test <-  list(x, y, n.iter1, n.iter2, mse, bigp.smalln, bigp.smalln.factor,
+                  screen, r.effects, max.var, center, intercept,
+                  fast, beta.blocks, verbose, ntree, seed, all.folds)
+
+    clusterEvalQ(cl, library(spikeslab))
+    
+    eval.fold.obj <- clusterApplyLB(cl, 1:(K+1), eval.fold, test)
+
+    stopCluster(cl)
+  }
+}
+else {
+  eval.fold.obj <- lapply(1:(K+1), eval.fold, ...)
+}
+
+
+#extract the primary obj
+#redefine eval.fold.obj
+primary.obj <- eval.fold.obj[[K+1]]$obj
+eval.fold.obj[[K+1]] <- NULL
+varnames <- primary.obj$names
+p <- length(varnames)
+
+#parse the eval.fold.obj
+cv <- model.size <- rep(NA, K)
+cv.path <- list(length = K)
+gnet.path <- stability <- matrix(0, K, p)
 cv.plot.path <-  matrix(NA, p + 1, K)
 for (k in 1:K) {
+  #extract cv, cv.path, gnet, gnet.path, stability, model size
+  cv[k] <- eval.fold.obj[[k]]$cv.k
+  cv.path[[k]] <- eval.fold.obj[[k]]$cv.path.k
+  gnet.k <- eval.fold.obj[[k]]$gnet.k
+  gnet.path[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- gnet.k
+  stability[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- 1 * (abs(gnet.k) >  .Machine$double.eps)
+  model.size[k] <- max(eval.fold.obj[[k]]$model.size.k)
+  #convert mse into matrix format more conducive for plotting/printing
   cv.plot.path[1:length(cv.path[[k]]), k] <- cv.path[[k]]
-}
+} 
 cv.plot.mean <- apply(cv.plot.path, 1, mean, na.rm = TRUE)
 cv.plot.se <- apply(cv.plot.path, 1, SD)/sqrt(K)
 
@@ -183,7 +235,7 @@ if (plot.it) {
 
 # stability analysis; make it pretty for the return
 tally.stability <- cbind(primary.obj$gnet,
-                         apply(gnet.path, 2, mean, na.rm = TRUE) * obj$x.scale,
+                         apply(gnet.path, 2, mean, na.rm = TRUE) * primary.obj$x.scale,
                          primary.obj$gnet.scale,
                          apply(gnet.path, 2, mean, na.rm = TRUE),
                          100 * apply(stability, 2, mean, na.rm = TRUE))

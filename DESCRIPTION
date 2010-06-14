@@ -1,17 +1,18 @@
 Package: spikeslab
-Version: 1.0.3
-Date: 2010-05-05
+Version: 1.1.0
+Date: 2010-06-14
 Title: Prediction and variable selection using spike and slab
         regression
 Author: Hemant Ishwaran <hemant.ishwaran@gmail.com>
 Maintainer: Udaya B. Kogalur <kogalurshear@gmail.com>
 Depends: R (>= 2.7.0), lars, randomForest
+Suggests: snow
 Description: Spike and slab for prediction and variable selection in
         linear regression models. Uses a generalized elastic net for
         variable selection.
 License: GPL (>= 2)
-URL: http://www.bio.ri.ccf.org/Resume/Pages/Ishwaran/ishwaran.html,
+URL: http://www.bio.ri.ccf.org/Resume/Pages/Ishwaran/ishwaran.html
         http://www.kogalur-shear.com
-Packaged: 2010-05-05 15:38:29 UTC; kogalur
+Packaged: 2010-06-14 16:11:51 UTC; kogalur
 Repository: CRAN
-Date/Publication: 2010-05-06 05:40:28
+Date/Publication: 2010-06-15 08:59:25

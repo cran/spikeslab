@@ -1,6 +1,16 @@
 Package: spikeslab
-Version: 1.0.3
-BUILD: bld20100504a
+Version: 1.1.0
+BUILD: bld20100614
+
+---------------------------------------------------------------------------------
+CHANGES TO RELEASE 1.1.0
+
+RELEASE 1.1.0 is a recommended upgrade of the product.
+
+o cv.spikeslab() now takes advantage of the CRAN package "snow".  It
+allows users to create a socket cluser on the local machine, enabling
+parallel execution of this function.  It scales with the number of CPU
+cores on the local machine.
 
 ---------------------------------------------------------------------------------
 CHANGES TO RELEASE 1.0.3

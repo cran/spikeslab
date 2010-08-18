@@ -86,13 +86,28 @@ cv.spikeslab(x = NULL, y = NULL, K = 10, parallel = FALSE,
 \examples{
 \dontrun{
 #------------------------------------------------------------
-# Example:  10-fold validation using parallel processing
+# Example 1: 10-fold validation using parallel processing
 #------------------------------------------------------------
 
-data(diabetesI, package = "spikeslab")
-y <- diabetesI[,  1]
-x <- diabetesI[, -1]
+data(ozoneI, package = "spikeslab")
+y <- ozoneI[,  1]
+x <- ozoneI[, -1]
 cv.obj <- cv.spikeslab(x = x, y = y, parallel = 4)
+print(head(cv.obj$stability, 25))
+
+#------------------------------------------------------------
+# Example 2: 10-fold validation using parallel processing
+# (high dimensional diabetes data)
+#------------------------------------------------------------
+
+# add 2000 noise variables
+data(diabetesI, package = "spikeslab")
+diabetes.noise <- cbind(diabetesI,
+      noise = matrix(rnorm(nrow(diabetesI) * 2000), nrow(diabetesI)))
+x <- diabetes.noise[, -1]
+y <- diabetes.noise[, 1]
+
+cv.obj <- cv.spikeslab(x = x, y = y, bigp.smalln=TRUE, parallel = 4)
 print(head(cv.obj$stability, 25))
 }
 }

@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.0
+####  SPIKE AND SLAB 1.1.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -550,15 +550,16 @@ out <- list(
        terms=mt,                               #terms
        sigma.hat=mse.hat,                      #internal (or external) mse
        y=Y.org,                                #original Y
-       x=X.wrk,                                #centered/rescaled X
+       xnew=X.wrk,                             #centered rescaled X
+       x=X.org,                                #original X            
        y.center=Y.org.mean,                    #centering for Y (0 if center=F)
        x.center=X.org.mean,                    #centering for original X
        x.scale=X.org.sd,                       #scaling for original X
        names=beta.names,                       #variable names 
-       bma=bma,                                #bma coefficients
-       bma.scale=bma.scale,                    #rescaled bma coefficients
-       gnet=gnet,                              #gnet coefficients
-       gnet.scale=gnet.scale,                  #rescaled bma coefficients
+       bma=bma,                                #bma coefficients for xnew
+       bma.scale=bma.scale,                    #bma coefficients rescaled for x
+       gnet=gnet,                              #gnet coefficients for xnew
+       gnet.scale=gnet.scale,                  #gnet coefficients rescaled for x 
        gnet.path=gnet.path,                    #gnet full solution path
        gnet.obj=gnet.obj,                      #gnet object (lars type)
        gnet.parms=penal,                       #grr parameters used to define gnet

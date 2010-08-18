@@ -119,15 +119,16 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
      \item{terms}{Terms.}
      \item{sigma.hat}{Estimated variance.}
      \item{y}{Original y.}
-     \item{x}{Centered, rescaled x matrix.}
+     \item{xnew}{Centered, rescaled x-matrix.}
+     \item{x}{Original x-matrix.}
      \item{y.center}{Centering for original y.}
-     \item{x.center}{Centering for original x matrix.}
-     \item{x.scale}{Scaling for original x matrix.}
+     \item{x.center}{Centering for original x-matrix.}
+     \item{x.scale}{Scaling for original x-matrix.}
      \item{names}{Variable names.}
-     \item{bma}{bma coefficients in terms of the standardized x.}
-     \item{bma.scale}{bma coefficients scaled in terms of the original x.}
-     \item{gnet}{gnet coefficients in terms of the standardized x.}
-     \item{gnet.scale}{gnet coefficients scaled in terms of the original x.}
+     \item{bma}{bma coefficients in terms of xnew.}
+     \item{bma.scale}{bma coefficients rescaled in terms of original x.}
+     \item{gnet}{gnet coefficients in terms of xnew.}
+     \item{gnet.scale}{gnet coefficients rescaled in terms of original x.}
      \item{gnet.path}{gnet path scaled in terms of the original x.}
      \item{gnet.obj}{gnet object (a lars-type object).}
      \item{gnet.parms}{Generalized ridge regression parameters used to
@@ -199,17 +200,7 @@ print(apply(obj2$complexity, 2, summary))
 
 \dontrun{
 #------------------------------------------------------------
-# Example 2:  10-fold validation (ozone data with interactions)
-#------------------------------------------------------------
-
-# see cv.spikeslab for more details
-data(ozoneI, package = "spikeslab")
-y <- ozoneI[,  1]
-x <- ozoneI[, -1]
-cv.obj <- cv.spikeslab(x = x, y = y)
-
-#------------------------------------------------------------
-# Example 3: high-dimensional noise (diabetes data)
+# Example 2: high-dimensional noise (diabetes data)
 #------------------------------------------------------------
 
 # add 2000 noise variables
@@ -233,7 +224,7 @@ obj2 <- spikeslab(x=x, y=y, verbose=TRUE, bigp.smalln=TRUE,
 obj2
 
 #------------------------------------------------------------
-# Example 4: housing data with interactions
+# Example 3: housing data with interactions
 #------------------------------------------------------------
 
 # another example of a big p, small n call

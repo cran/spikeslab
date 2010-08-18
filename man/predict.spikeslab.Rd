@@ -9,7 +9,8 @@
 }
 \arguments{
   \item{object}{An object of class \code{spikeslab}.}
-  \item{newdata}{Data frame containing test data.}
+  \item{newdata}{Data frame or x-matrix containing test data (if
+    omitted, the training data is used).}
   \item{...}{Further arguments passed to or from other methods.}
 }
 \details{
@@ -45,8 +46,21 @@
 }
 \examples{
 \dontrun{
+
 #------------------------------------------------------------
-# Example 1: ozone data with interactions
+# Example 1: get the predictor for the training data
+#------------------------------------------------------------
+data(diabetesI, package = "spikeslab")
+x <- diabetesI[, -1]
+y <- diabetesI[, 1]
+obj <- spikeslab(x = x, y = y)
+#gnet predictor
+yhat.gnet <- predict(obj)$yhat.gnet
+#an equivalent call is...
+yhat.gnet <- predict(obj, x = x)$yhat.gnet
+
+#------------------------------------------------------------
+# Example 2: ozone data with interactions
 #------------------------------------------------------------
 
 data(ozoneI, package = "spikeslab")

@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.0
+####  SPIKE AND SLAB 1.1.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -82,18 +82,32 @@ predict.spikeslab <- function(object, newdata = NULL, ...)
 {
 
  ### --------------------------------------------------------------
- ### check that object is compatible
- ### check for newdata
+ ### preliminary checks
 
+  #check that object is compatible
   if (!inherits(object,"spikeslab"))
      stop("This function only works for objects of class `spikeslab'")
-  if (is.null(newdata)) stop("need to supply test data")
+  #check for newdata
+  if (is.null(newdata)) {
+    newdata <- object$x
+    colnames(newdata) <- object$names
+  }
+  #special allowance for newdata with one observation
+  newdata <- rbind(newdata)
+  #check for colnames
+  if (is.null(colnames(newdata))) {
+    if (ncol(newdata) == length(object$names)) {
+       colnames(newdata) <- object$names
+    } else {
+       stop("Number of columns of testing data does not match training data")
+    }
+  }
   
  ### --------------------------------------------------------------
- ### coherence between test and training data
+ ### ensure coherence between test and training data
 
  #restrict predictors in test data to those in the training data
- newdata <- as.data.frame(newdata)
+ newdata <- as.data.frame(rbind(newdata))
  if (is.null(object$terms)) {
    old.xnames <- object$names
  }

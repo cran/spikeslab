@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.1
+####  SPIKE AND SLAB 1.1.2
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -215,7 +215,7 @@ if (!is.null(r.effects)) {
 
 ### ---------------------------------
 # variable selection method no longer supported
-method <- "gnet"
+method <- "AIC"
 
 ### ---------------------------------
 # check coherence of priors
@@ -425,18 +425,23 @@ else {
 
   ### ---------------------------------
   # Order variables using the bma
+  # Track the ordered variables used to fit the gnet
 
    if (verbose) cat("\t primary loop completed... \r")
    o.r <- order(abs(bma), decreasing = TRUE)
-
+   if (phat.bma > 0) {
+     gnet.obj.vars <- o.r[1:phat.bma]
+   }
+   else {
+     gnet.obj.vars <- NULL
+   }
 
 ### --------------------------------------------------------------
 ###
 ###  Variable Selection via generalized elastic net (gnet)
 ###
 ### gnet solution corresponds to ellipsoid optimization around GRR estimator
-### GRR is the most closely aligned estimator to the bma
-### model selection based on AIC 
+### closest to the bma; model selection based on AIC 
 ###
 ### --------------------------------------------------------------
 
@@ -523,18 +528,22 @@ verbose.list <- list(
 )
   
 if (verbose){
-cat("-------------------------------------------------------------------","\n")
-cat("Variable selection method     :",method,"\n")
-cat("Big p small n                 :",bigp.smalln,"\n")
-cat("Screen variables              :",screen,"\n")
-cat("Fast processing               :",fast,"\n")
-cat("Sample size                   :",n.data,"\n")
-cat("No. predictors                :",n.cov,"\n")
-cat("No. burn-in values            :",n.iter1,"\n")
-cat("No. sampled values            :",n.iter2,"\n")
-cat("Estimated mse                 :",round(mean(mse.hat),4),"\n")
-cat("Model size                    :",phat,"\n")
-cat("-------------------------------------------------------------------","\n")
+  
+    cat("-------------------------------------------------------------------","\n")
+    cat("Variable selection method     :",verbose.list[[1]],"\n")
+    cat("Big p small n                 :",verbose.list[[2]],"\n")
+    cat("Screen variables              :",verbose.list[[3]],"\n")
+    cat("Fast processing               :",verbose.list[[4]],"\n")
+    cat("Sample size                   :",verbose.list[[5]],"\n")
+    cat("No. predictors                :",verbose.list[[6]],"\n")
+    cat("No. burn-in values            :",verbose.list[[7]],"\n")
+    cat("No. sampled values            :",verbose.list[[8]],"\n")
+    cat("Estimated mse                 :",verbose.list[[9]],"\n")
+    cat("Model size                    :",verbose.list[[10]],"\n")
+    cat("\n\n")
+    cat("---> Top variables:\n")
+    print(round(ss.summary[ss.summary[, 2] != 0, ], 3))
+    cat("-------------------------------------------------------------------","\n")
 }
 
 ### --------------------------------------------------------------
@@ -562,10 +571,12 @@ out <- list(
        gnet.scale=gnet.scale,                  #gnet coefficients rescaled for x 
        gnet.path=gnet.path,                    #gnet full solution path
        gnet.obj=gnet.obj,                      #gnet object (lars type)
+       gnet.obj.vars=gnet.obj.vars,            #variables (in order) used to define gnet
        gnet.parms=penal,                       #grr parameters used to define gnet
        phat=phat,                              #estimated dimension
        complexity=complexity.vec               #complexity estimates
        )
+
 class(out) <- "spikeslab"
 return(out)
 

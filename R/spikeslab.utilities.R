@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.1
+####  SPIKE AND SLAB 1.1.2
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -93,7 +93,6 @@ error.bars <- function(x, upper, lower, width = 0.0025, ...)
         segments(x, upper, x, lower, ...)
         segments(x - barw, upper, x + barw, upper, ...)
         segments(x - barw, lower, x + barw, lower, ...)
-        range(upper, lower)
 }
 
 # sd for rescaling X
@@ -173,7 +172,7 @@ Ridge <- function(Y, X, l) {
 # generalized elastic net (for variable selection)
 gnet.get <- function(Y, X, X.pt, phat, penal, mse = NULL, eps = .Machine$double.eps) {
   # gnet's solution uses ellipsoid optimization centered at the GRR estimator
-  # the GRR is that most closely aligned with the BMA
+  # most closely aligned with the BMA
   # gnet's solution set determined using AIC 
   p <- ncol(X)
   n <- nrow(X)

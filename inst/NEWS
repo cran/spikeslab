@@ -1,11 +1,11 @@
 Package: spikeslab
-Version: 1.1.1
-BUILD: bld20100818
+Version: 1.1.2
+BUILD: bld20101028
 
 ---------------------------------------------------------------------------------
-CHANGES TO RELEASE 1.1.1
+CHANGES TO RELEASE 1.1.2
 
-RELEASE 1.1.1 is a minor upgrade of the product and will not affect most users.
+RELEASE 1.1.2 is a minor upgrade of the product and will not affect most users.
 
 o minor fixes to R-side wrapper, adjustments to packaging, and documentation.
 

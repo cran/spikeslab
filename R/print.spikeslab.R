@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.1
+####  SPIKE AND SLAB 1.1.2
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -92,20 +92,47 @@ print.spikeslab <- function(x, ...)
   ###	Terminal Output
   ### --------------------------------------------------------------	
 
-  cat("-------------------------------------------------------------------","\n")
-  cat("Variable selection method     :",verbose[[1]],"\n")
-  cat("Big p small n                 :",verbose[[2]],"\n")
-  cat("Screen variables              :",verbose[[3]],"\n")
-  cat("Fast processing               :",verbose[[4]],"\n")
-  cat("Sample size                   :",verbose[[5]],"\n")
-  cat("No. predictors                :",verbose[[6]],"\n")
-  cat("No. burn-in values            :",verbose[[7]],"\n")
-  cat("No. sampled values            :",verbose[[8]],"\n")
-  cat("Estimated mse                 :",verbose[[9]],"\n")
-  cat("Model size                    :",verbose[[10]],"\n")
-  cat("\n\n")
-  cat("---> Top variables:\n")
-  print(round(x$summary[x$summary[, 2] != 0, ], 3))
+  if (sum(inherits(x, c("spikeslab", "cv"), TRUE) == c(1, 2)) != 2) {
+
+    ### spike slab basic output
+    
+    cat("-------------------------------------------------------------------","\n")
+    cat("Variable selection method     :",verbose[[1]],"\n")
+    cat("Big p small n                 :",verbose[[2]],"\n")
+    cat("Screen variables              :",verbose[[3]],"\n")
+    cat("Fast processing               :",verbose[[4]],"\n")
+    cat("Sample size                   :",verbose[[5]],"\n")
+    cat("No. predictors                :",verbose[[6]],"\n")
+    cat("No. burn-in values            :",verbose[[7]],"\n")
+    cat("No. sampled values            :",verbose[[8]],"\n")
+    cat("Estimated mse                 :",verbose[[9]],"\n")
+    cat("Model size                    :",verbose[[10]],"\n")
+    cat("\n\n")
+    cat("---> Top variables:\n")
+    print(round(x$summary[x$summary[, 2] != 0, ], 3))
+    
+  }
+  
+  else {
+    
+    ### cv output
+    
+    cat("-------------------------------------------------------------------","\n")
+    cat("Variable selection method     :",verbose[[1]],"\n")
+    cat("Big p small n                 :",verbose[[2]],"\n")
+    cat("Screen variables              :",verbose[[3]],"\n")
+    cat("Fast processing               :",verbose[[4]],"\n")
+    cat("Sample size                   :",verbose[[5]],"\n")
+    cat("No. predictors                :",verbose[[6]],"\n")
+    cat("No. burn-in values            :",verbose[[7]],"\n")
+    cat("No. sampled values            :",verbose[[8]],"\n")
+    cat("K-fold                        :",verbose[[9]],"\n")
+    cat("CV mean-squared error         :",verbose[[10]],"\n")
+    cat("Model size                    :",verbose[[11]],"\n")
+    cat("\n\nStability (top variables):\n")
+    print(head(x$stability, verbose[[12]]))
+    
+  }
 
   cat("-------------------------------------------------------------------","\n")
 

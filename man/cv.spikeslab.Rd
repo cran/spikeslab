@@ -57,11 +57,14 @@ cv.spikeslab(x = NULL, y = NULL, K = 10, parallel = FALSE,
      Invisibly returns a list with components:
      \item{cv}{K-dimensional vector of mean-squared errors for the gnet.}
      \item{cv.path}{A matrix of mean-squared errors for the gnet
-       solution path.  Rows correspond to model sizes, columns are the folds.}
+       solution path. Rows correspond to model sizes, columns are the folds.}
+     \item{model.size}{Vector of model sizes.}  
      \item{stability}{Stability for each variable defined as the
        percentage of times a variable is identified over the K-folds.}
      \item{gnet.path}{gnet path from the full data, scaled in terms of the original x.}
      \item{gnet.obj}{gnet object from fitting the full data (a lars-type object).}
+     \item{gnet.obj.vars}{Variables (in order) used to calculate the gnet object.}
+     \item{verbose}{Verbose details (used for printing).}
 }
 \author{
   Hemant Ishwaran (\email{hemant.ishwaran@gmail.com})
@@ -80,6 +83,7 @@ cv.spikeslab(x = NULL, y = NULL, K = 10, parallel = FALSE,
 }
 \seealso{
   \code{sparsePC.spikeslab},
+  \code{plot.spikeslab},
   \code{predict.spikeslab},
   \code{print.spikeslab}.
 }
@@ -93,7 +97,8 @@ data(ozoneI, package = "spikeslab")
 y <- ozoneI[,  1]
 x <- ozoneI[, -1]
 cv.obj <- cv.spikeslab(x = x, y = y, parallel = 4)
-print(head(cv.obj$stability, 25))
+plot(cv.obj, plot.type = "cv")
+plot(cv.obj, plot.type = "path")
 
 #------------------------------------------------------------
 # Example 2: 10-fold validation using parallel processing
@@ -108,7 +113,7 @@ x <- diabetes.noise[, -1]
 y <- diabetes.noise[, 1]
 
 cv.obj <- cv.spikeslab(x = x, y = y, bigp.smalln=TRUE, parallel = 4)
-print(head(cv.obj$stability, 25))
+plot(cv.obj)
 }
 }
 \keyword{regression}

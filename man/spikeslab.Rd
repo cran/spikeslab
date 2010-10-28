@@ -56,19 +56,19 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
   \code{n} is the sample size, use the option \code{bigp.smalln}=TRUE.
   Doing so implements a three-stage procedure:
 
-    (1) FILTERING STEP.  This removes all predictors except the top
+    (1) Filtering step.  This removes all predictors except the top
     \code{n} times \code{bigp.smalln.factor} ones.  Uses spike and slab
     regression with grouped regularization (complexity) parameters.
   
-    (2) MODEL AVERAGING STEP.  Refit the model using only those
-    predictors from STEP 1.  Returns the posterior mean values from
+    (2) Model averaging step.  Refit the model using only those
+    predictors from step 1.  Returns the posterior mean values from
     fitting a spike and slab model; referred to as the Bayesian model
     averaged (bma) estimate.
     
-    (3) VARIABLE SELECTION STEP.  Select variables using the generalized
+    (3) Variable selection step.  Select variables using the generalized
     elastic net (gnet).
     
-  The FILTERING STEP is omitted when \code{bigp.smalln}=FALSE.
+  The filtering step is omitted when \code{bigp.smalln}=FALSE.
   Filtering can however be requested by setting \code{screen}=TRUE
   although users should be aware that this may degrade performance and
   should really only be used when \code{p} >> \code{n}.
@@ -110,7 +110,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
   when \code{mse}=TRUE.  Note that \code{mse} is over-ridden and set to
   FALSE when \code{bigp.smalln}=TRUE.
 
-  Depends on the \code{lars} package for the VARIABLE SLECTION STEP.
+  Depends on the \code{lars} package for the variable slection step.
 }   
 \value{
      An object of class \code{spikeslab} with the following components:
@@ -131,6 +131,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
      \item{gnet.scale}{gnet coefficients rescaled in terms of original x.}
      \item{gnet.path}{gnet path scaled in terms of the original x.}
      \item{gnet.obj}{gnet object (a lars-type object).}
+     \item{gnet.obj.vars}{Variables (in order) used to calculate the gnet object.}
      \item{gnet.parms}{Generalized ridge regression parameters used to
        define the gnet.}
      \item{phat}{Estimated model dimension.}
@@ -161,7 +162,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
   Ishwaran H. and Rao J.S. (2005b).  Spike and slab gene selection for
   multigroup microarray data. \emph{J. Amer. Stat. Assoc.}, 100:764-780.
 
-  Ishwaran H. and Rao J.S. (2009).  Generalized ridge regression:
+  Ishwaran H. and Rao J.S. (2010).  Generalized ridge regression:
   geometry and computational solutions when p is larger than n.
 
   Zou H. and Hastie T. (2005).  Regularization and variable selection
@@ -170,6 +171,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
 }
 \seealso{
   \code{cv.spikeslab},
+  \code{plot.spikeslab},
   \code{predict.spikeslab},
   \code{print.spikeslab},
   \code{sparsePC.spikeslab}.
@@ -184,7 +186,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
 data(diabetesI, package = "spikeslab")
 obj <- spikeslab(Y ~ . , diabetesI, verbose=TRUE)
 print(obj)
-plot(obj$gnet.obj)#the gnet object is interpretable by lars()
+plot(obj)
 
 # grouping effect
 # separate main effects and interactions into two groups

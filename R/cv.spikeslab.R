@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.1
+####  SPIKE AND SLAB 1.1.2
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -226,8 +226,7 @@ cv.plot.se <- apply(cv.plot.path, 1, SD)/sqrt(K)
 if (plot.it) {
   matplot(0:p, cv.plot.path, type = c("l", "n")[1 + 1 * (K > 20)], lty = 3, col = "gray", 
          xlim = range(c(0, model.size), na.rm = TRUE),
-         ylim = range(c(cv.plot.path, cv.plot.mean + cv.plot.se,
-            cv.plot.mean - cv.plot.se), na.rm = TRUE),
+         ylim = range(c(cv.plot.path, cv.plot.mean + cv.plot.se, cv.plot.mean - cv.plot.se), na.rm = TRUE),
          xlab="Model Size", ylab="Cross-Validated MSE")
   lines(0:p, cv.plot.mean, lty = 1, lwd = 2, col = 4)
   error.bars(0:p, cv.plot.mean + cv.plot.se, cv.plot.mean - cv.plot.se, width = 0.0025, col = 2)
@@ -244,7 +243,13 @@ rownames(tally.stability) <- varnames
 tally.stability <- tally.stability[order(tally.stability[, 5], abs(tally.stability[, 1]),
                           decreasing = TRUE),, drop = FALSE]
 
-# pretty details for terminal output
+
+### --------------------------------------------------------------
+###	Terminal Output
+###     Save as list
+### --------------------------------------------------------------	
+
+# model details for terminal output
 get.model.size <- function(mn, se) {
   ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
   mn.upper <- mn[ms.upper]
@@ -254,25 +259,53 @@ get.model.size <- function(mn, se) {
   if (length(ms.all) == 1) return(ms.all)
   paste("[", ms.lower, ",", ms.upper, "]", sep = "")
 }
-if (verbose){
-cat("-------------------------------------------------------------------","\n")
-cat("Big p small n                 :",bigp.smalln,"\n")
-cat("Screen variables              :",screen,"\n")
-cat("Fast processing               :",fast,"\n")
-cat("Sample size                   :",nrow(x),"\n")
-cat("No. predictors                :",ncol(x),"\n")
-cat("No. burn-in values            :",n.iter1,"\n")
-cat("No. sampled values            :",n.iter2,"\n")
-cat("K-fold                        :",K,"\n")
-cat("CV mean-squared error         :", paste(round(mean(cv, na.rm = TRUE), 3) , "+/-",
-                                         round(sd(cv, na.rm = TRUE)/sqrt(K), 3), "\n"))
-cat("Model size                    :",get.model.size(cv.plot.mean, cv.plot.se), "\n")
-cat("-------------------------------------------------------------------","\n")
+get.lower.model.size <- function(mn, se) {
+  ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
+  mn.upper <- mn[ms.upper]
+  ms.range <- which((mn + se >= mn.upper) & (mn - se <= mn.upper))
+  min(ms.range)
+}
+
+verbose.list <- list(
+  c("cross-validation"),
+  c(bigp.smalln),
+  c(screen),
+  c(fast),
+  c(nrow(x)),
+  c(ncol(x)),
+  c(n.iter1),
+  c(n.iter2),
+  c(K),
+  c(paste(round(mean(cv, na.rm = TRUE), 3) , "+/-",
+    round(sd(cv, na.rm = TRUE)/sqrt(K), 3))),
+  c(get.model.size(cv.plot.mean, cv.plot.se)),
+  c(get.lower.model.size(cv.plot.mean, cv.plot.se))
+)
+
+if (verbose) {
+     cat("-------------------------------------------------------------------","\n")
+    cat("Variable selection method     :",verbose.list[[1]],"\n")
+    cat("Big p small n                 :",verbose.list[[2]],"\n")
+    cat("Screen variables              :",verbose.list[[3]],"\n")
+    cat("Fast processing               :",verbose.list[[4]],"\n")
+    cat("Sample size                   :",verbose.list[[5]],"\n")
+    cat("No. predictors                :",verbose.list[[6]],"\n")
+    cat("No. burn-in values            :",verbose.list[[7]],"\n")
+    cat("No. sampled values            :",verbose.list[[8]],"\n")
+    cat("K-fold                        :",verbose.list[[9]],"\n")
+    cat("CV mean-squared error         :",verbose.list[[10]],"\n")
+    cat("Model size                    :",verbose.list[[11]],"\n")
+    cat("\n\nStability (top variables):\n")
+    print(head(tally.stability, verbose.list[[12]]))
+    cat("-------------------------------------------------------------------","\n")
 }
 
 #return the goodies
-object <- list(cv = cv, cv.path = cv.plot.path, stability = tally.stability,
-               gnet.path = primary.obj$gnet.path, gnet.obj = primary.obj$gnet.obj)
+object <- list(cv = cv, cv.path = cv.plot.path,
+               model.size = model.size, stability = tally.stability,
+               gnet.path = primary.obj$gnet.path, gnet.obj = primary.obj$gnet.obj,
+               gnet.obj.vars = primary.obj$gnet.obj.vars, verbose = verbose.list)
+class(object) <- c("spikeslab", "cv")
 invisible(object)
 
 }

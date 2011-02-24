@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.2
+####  SPIKE AND SLAB 1.1.3.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -82,8 +82,20 @@ print.spikeslab <- function(x, ...)
 {
 
   ### Check that object is compatible
-  if (!inherits(x,"spikeslab"))
+  if (!inherits(x, "spikeslab"))
      stop("This function only works for objects of class `spikeslab'")
+  
+  ###check whether object inherits mixing type
+  ###make suitable alterations to merge mixing results
+  if (sum(inherits(x, c("spikeslab", "mixing"), TRUE) == c(1, 2)) == 2) {
+     o.r <- order(abs(x$spikeslab.obj$bma), decreasing = TRUE)
+     grr.mix <- x$grr.mix[o.r]
+     grr.mix.scale <- x$grr.mix.scale[o.r]
+     new.summary <- cbind(x$spikeslab.obj$summary, grr.mix, grr.mix.scale)
+     new.summary <- new.summary[, c(1, 2, 5, 3, 4, 6)]
+     x <- x$spikeslab.obj
+     x$summary <- new.summary
+  }
 
   ### extract summary data
   verbose <- x$verbose
@@ -113,7 +125,7 @@ print.spikeslab <- function(x, ...)
     
   }
   
-  else {
+  if (sum(inherits(x, c("spikeslab", "cv"), TRUE) == c(1, 2)) == 2) {
     
     ### cv output
     
@@ -129,8 +141,8 @@ print.spikeslab <- function(x, ...)
     cat("K-fold                        :",verbose[[9]],"\n")
     cat("CV mean-squared error         :",verbose[[10]],"\n")
     cat("Model size                    :",verbose[[11]],"\n")
-    cat("\n\nStability (top variables):\n")
-    print(head(x$stability, verbose[[12]]))
+    cat("\n\nTop variables in terms of stability:\n")
+    print(head(round(x$stability, 3), verbose[[12]]))
     
   }
 

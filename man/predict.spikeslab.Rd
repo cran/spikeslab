@@ -18,7 +18,8 @@
 }    
 \value{
   A vector of fitted values for the BMA and gnet and a matrix of fitted
-  values for the gnet path.
+  values for the gnet path.  Also returns the grr mixing predictor if
+  the object has been parsed by the mixing wrapper.
 }
 \author{
   Hemant Ishwaran (\email{hemant.ishwaran@gmail.com})
@@ -38,8 +39,16 @@
   Ishwaran H. and Rao J.S. (2005b).  Spike and slab gene selection for
   multigroup microarray data. \emph{J. Amer. Stat. Assoc.}, 100:764-780.
 
-  Ishwaran H. and Rao J.S. (2009).  Generalized ridge regression:
+  Ishwaran H. and Rao J.S. (2010).  Generalized ridge regression:
   geometry and computational solutions when p is larger than n.
+  
+  Ishwaran H., Kogalur U.B. and Rao J.S. (2010). spikeslab: prediction
+  and variable selection using spike and slab regression. \emph{R Journal},
+  2(2), 68-73.
+
+  Ishwaran H. and Rao J.S. (2011).  Mixing generalized ridge
+  regressions.
+
 }	
 \seealso{
   \code{spikeslab}.

@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.2
+####  SPIKE AND SLAB 1.1.3.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -97,6 +97,7 @@ cv.spikeslab <- function(
  fast=TRUE,           #update beta in blocks (for bigp.small n, controls screening)
  beta.blocks=5,       #no. of beta blocks in beta Gibbs update (fast=TRUE)
  verbose=TRUE,        #verbose details
+ save.all=TRUE,       #save spikeslab object for each fold?
  ntree=300,           #number RF trees
  seed=NULL,           #seed
   ...)
@@ -137,7 +138,7 @@ eval.fold <- function(k, ...) {
     #test-set prediction
     pred.obj <- predict(obj, as.matrix(x[omit,, drop = FALSE])) 
     yhat.k <- pred.obj$yhat.gnet
-    yhat.path.k <- pred.obj$yhat.gnet.path
+    yhat.path.k <- rbind(pred.obj$yhat.gnet.path)
     gnet.path.k <- obj$gnet.path$path
     #lars should only return steps 0, ..., p; yet there seems to be ties
     #apply an ad-hoc beta-breaker here
@@ -156,10 +157,13 @@ eval.fold <- function(k, ...) {
       cv.path.k <- cv.k <- mean((y[omit] - mean(y[-omit]))^2, na.rm = TRUE)
       gnet.k <- rep(0, length(obj$names))
     }
-    return(list(model.size.k = model.size.k,
+    return(list(
+              obj=(if (save.all) obj else NULL),
+              model.size.k = model.size.k,
               cv.k = cv.k,
               cv.path.k = cv.path.k,
               gnet.k = gnet.k,
+              bma.k = obj$bma, 
               names = obj$names))
   }
   else {
@@ -167,7 +171,7 @@ eval.fold <- function(k, ...) {
   }
 }
 
-## Determine if parallel processing is to be done.
+## determine if parallel processing is to be done.
 if (parallel) {
  if (!require(snow, quietly = TRUE)) {
      warning("package 'snow' not found, i.e., parallel processing was not performed")
@@ -178,13 +182,13 @@ if (parallel) {
     if (parallel == TRUE) {
       parallel <- 2
     }
-    cl <- makeSOCKcluster(rep("localhost", as.integer(parallel)))
+    cl <- makeSOCKcluster(rep("localhost", as.integer(parallel))) 
 
     test <-  list(x, y, n.iter1, n.iter2, mse, bigp.smalln, bigp.smalln.factor,
                   screen, r.effects, max.var, center, intercept,
                   fast, beta.blocks, verbose, ntree, seed, all.folds)
 
-    clusterEvalQ(cl, library(spikeslab))
+    temp <- clusterEvalQ(cl, library(spikeslab))
     
     eval.fold.obj <- clusterApplyLB(cl, 1:(K+1), eval.fold, test)
 
@@ -195,37 +199,69 @@ else {
   eval.fold.obj <- lapply(1:(K+1), eval.fold, ...)
 }
 
-
-#extract the primary obj
-#redefine eval.fold.obj
+## extract the primary object
 primary.obj <- eval.fold.obj[[K+1]]$obj
 eval.fold.obj[[K+1]] <- NULL
+all.folds[[K+1]] <- NULL
+
+## parse the eval.fold.obj
 varnames <- primary.obj$names
 p <- length(varnames)
-
-#parse the eval.fold.obj
-cv <- model.size <- rep(NA, K)
-cv.path <- list(length = K)
-gnet.path <- stability <- matrix(0, K, p)
+cv <- max.model.size <- rep(NA, K)
+cv.path <- model.size <- list(length = K)
+bma.path <- gnet.path <- stability <- matrix(0, K, p)
+cv.spikeslab.obj <- gnet.model <- vector("list", K)
 cv.plot.path <-  matrix(NA, p + 1, K)
 for (k in 1:K) {
+  #extract the cv obj
+  if (save.all) cv.spikeslab.obj[[k]] <- eval.fold.obj[[k]]$obj
   #extract cv, cv.path, gnet, gnet.path, stability, model size
   cv[k] <- eval.fold.obj[[k]]$cv.k
   cv.path[[k]] <- eval.fold.obj[[k]]$cv.path.k
-  gnet.k <- eval.fold.obj[[k]]$gnet.k
-  gnet.path[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- gnet.k
-  stability[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- 1 * (abs(gnet.k) >  .Machine$double.eps)
-  model.size[k] <- max(eval.fold.obj[[k]]$model.size.k)
+  gnet.k.pt <- (abs(eval.fold.obj[[k]]$gnet.k) >  .Machine$double.eps)
+  bma.path[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- eval.fold.obj[[k]]$bma.k
+  gnet.path[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- eval.fold.obj[[k]]$gnet.k
+  gnet.model[[k]] <- match(eval.fold.obj[[k]]$names[gnet.k.pt], varnames)
+  stability[k, is.element(varnames, eval.fold.obj[[k]]$names)] <- 1 * gnet.k.pt
+  model.size[[k]] <- eval.fold.obj[[k]]$model.size.k
+  max.model.size[k] <- max(model.size[[k]], na.rm = TRUE) 
   #convert mse into matrix format more conducive for plotting/printing
   cv.plot.path[1:length(cv.path[[k]]), k] <- cv.path[[k]]
-} 
+}
+if (!save.all) cv.spikeslab.obj <- NULL
 cv.plot.mean <- apply(cv.plot.path, 1, mean, na.rm = TRUE)
 cv.plot.se <- apply(cv.plot.path, 1, SD)/sqrt(K)
+
+## parse the primary obj
+## apply an ad-hoc beta-breaker for the full path
+## in extreme cases "pad" the full path with NA's
+## determine the gnet as the cv optimized one
+## extract other primary objects to be passed outside the wrapper
+primary.gnet.path <- primary.obj$gnet.path$path
+primary.model.size <- apply(primary.gnet.path, 1,
+             function(sbeta){sum(abs(sbeta) > .Machine$double.eps, na.rm = TRUE)})
+beta.break <- which(!duplicated(primary.model.size))
+if (length(beta.break) > 0) {
+    primary.gnet.path <- as.matrix(primary.gnet.path[beta.break, ])
+    primary.model.size <- apply(primary.gnet.path, 1,
+             function(sbeta){sum(abs(sbeta) > .Machine$double.eps, na.rm = TRUE)})
+}
+if (nrow(primary.gnet.path) < (p + 1)) {
+  primary.gnet.path <- rbind(primary.gnet.path, matrix(NA, (p + 1) - nrow(primary.gnet.path), p))
+}
+
+primary.gnet.cv <- cv.plot.mean
+primary.gnet.scale <- primary.gnet.path[which(primary.gnet.cv == min(primary.gnet.cv, na.rm = TRUE))[1], ]
+primary.gnet <- primary.gnet.scale * primary.obj$x.scale
+primary.gnet.path <- list(path = primary.gnet.path, cv = primary.gnet.cv, model.size = model.size)
+primary.obj$gnet <- primary.gnet
+primary.obj$gnet.scale <- primary.gnet.scale
+
 
 ## plot it
 if (plot.it) {
   matplot(0:p, cv.plot.path, type = c("l", "n")[1 + 1 * (K > 20)], lty = 3, col = "gray", 
-         xlim = range(c(0, model.size), na.rm = TRUE),
+         xlim = range(c(0, max.model.size), na.rm = TRUE),
          ylim = range(c(cv.plot.path, cv.plot.mean + cv.plot.se, cv.plot.mean - cv.plot.se), na.rm = TRUE),
          xlab="Model Size", ylab="Cross-Validated MSE")
   lines(0:p, cv.plot.mean, lty = 1, lwd = 2, col = 4)
@@ -233,12 +269,12 @@ if (plot.it) {
 }
 
 # stability analysis; make it pretty for the return
-tally.stability <- cbind(primary.obj$gnet,
+tally.stability <- cbind(primary.obj$bma,
+                         apply(bma.path, 2, mean, na.rm = TRUE),
+                         primary.obj$gnet,
                          apply(gnet.path, 2, mean, na.rm = TRUE) * primary.obj$x.scale,
-                         primary.obj$gnet.scale,
-                         apply(gnet.path, 2, mean, na.rm = TRUE),
                          100 * apply(stability, 2, mean, na.rm = TRUE))
-colnames(tally.stability) <- c("gnet", "gnet.cv", "gnet.scale", "gnet.scale.cv", "stability")
+colnames(tally.stability) <- c("bma", "bma.cv", "gnet", "gnet.cv", "stability")
 rownames(tally.stability) <- varnames
 tally.stability <- tally.stability[order(tally.stability[, 5], abs(tally.stability[, 1]),
                           decreasing = TRUE),, drop = FALSE]
@@ -249,7 +285,7 @@ tally.stability <- tally.stability[order(tally.stability[, 5], abs(tally.stabili
 ###     Save as list
 ### --------------------------------------------------------------	
 
-# model details for terminal output
+# functions for determining model sizes
 get.model.size <- function(mn, se) {
   ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
   mn.upper <- mn[ms.upper]
@@ -263,7 +299,7 @@ get.lower.model.size <- function(mn, se) {
   ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
   mn.upper <- mn[ms.upper]
   ms.range <- which((mn + se >= mn.upper) & (mn - se <= mn.upper))
-  min(ms.range)
+  min(ms.range, na.rm = TRUE)
 }
 
 verbose.list <- list(
@@ -279,7 +315,7 @@ verbose.list <- list(
   c(paste(round(mean(cv, na.rm = TRUE), 3) , "+/-",
     round(sd(cv, na.rm = TRUE)/sqrt(K), 3))),
   c(get.model.size(cv.plot.mean, cv.plot.se)),
-  c(get.lower.model.size(cv.plot.mean, cv.plot.se))
+  c(sum(abs(primary.gnet) > .Machine$double.eps))
 )
 
 if (verbose) {
@@ -295,16 +331,28 @@ if (verbose) {
     cat("K-fold                        :",verbose.list[[9]],"\n")
     cat("CV mean-squared error         :",verbose.list[[10]],"\n")
     cat("Model size                    :",verbose.list[[11]],"\n")
-    cat("\n\nStability (top variables):\n")
-    print(head(tally.stability, verbose.list[[12]]))
+    cat("\n\nTop variables in terms of stability:\n")
+    print(head(round(tally.stability, 3), verbose.list[[12]]))
     cat("-------------------------------------------------------------------","\n")
 }
 
 #return the goodies
-object <- list(cv = cv, cv.path = cv.plot.path,
-               model.size = model.size, stability = tally.stability,
-               gnet.path = primary.obj$gnet.path, gnet.obj = primary.obj$gnet.obj,
-               gnet.obj.vars = primary.obj$gnet.obj.vars, verbose = verbose.list)
+object <- list(
+               spikeslab.obj = primary.obj,          #spikeslab obj from full data
+               cv.spikeslab.obj=cv.spikeslab.obj,    #cv spikeslab obj for each fold
+               cv.folds=all.folds,                   #cv folds
+               cv = cv,                              #mean cv for each fold
+               cv.path = cv.plot.path,               #cv path (p+1) x K
+               stability = tally.stability,          #stability values
+               bma = primary.obj$bma,                #bma coefficients, for scaled x   
+               bma.scale = primary.obj$bma.scale,    #bma coefficiebnts, for original x   
+               gnet = primary.obj$gnet,              #cv-optimized gnet, for scaled x
+               gnet.scale = primary.obj$gnet.scale,  #cv-optimized gnet, for original x   
+               gnet.model = gnet.model,              #models used to determine gnet
+               gnet.path = primary.gnet.path,        #gnet path (full data)
+               gnet.obj = primary.obj$gnet.obj,      #gnet object (full data)
+               gnet.obj.vars =  primary.obj$gnet.obj.vars,#variables used to define gnet
+               verbose = verbose.list)               #verbose (for print)
 class(object) <- c("spikeslab", "cv")
 invisible(object)
 

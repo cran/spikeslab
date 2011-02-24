@@ -29,9 +29,10 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
       Otherwise, the variance is included in the prior and estimated
       using Gibbs sampling.}
     \item{bigp.smalln}{Use if \code{p} >> \code{n}.}
-    \item{bigp.smalln.factor}{Top \code{n} times this value of variables
-      to be kept in the filtering step (used when \code{p} >> \code{n}).}
-    \item{screen}{If TRUE, variables are first pre-filtered.}
+    \item{bigp.smalln.factor}{Removes all variables except the top
+      \code{n}times \code{bigp.smalln.factor} ones (used in filtering when 
+      \code{p} >> \code{n}).}
+    \item{screen}{If TRUE, variables are pre-filtered.}
     \item{r.effects}{List used for grouping variables (see details below).}
     \item{max.var}{Maximum number of variables allowed in the final model.}
     \item{center}{If TRUE, variables are centered by their
@@ -56,7 +57,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
   \code{n} is the sample size, use the option \code{bigp.smalln}=TRUE.
   Doing so implements a three-stage procedure:
 
-    (1) Filtering step.  This removes all predictors except the top
+    (1) Filtering step.  This removes all variables except the top
     \code{n} times \code{bigp.smalln.factor} ones.  Uses spike and slab
     regression with grouped regularization (complexity) parameters.
   
@@ -71,7 +72,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
   The filtering step is omitted when \code{bigp.smalln}=FALSE.
   Filtering can however be requested by setting \code{screen}=TRUE
   although users should be aware that this may degrade performance and
-  should really only be used when \code{p} >> \code{n}.
+  should only be used when \code{p} is on the same order of \code{n}.
 
   Variables can be grouped using \code{r.effects}.  Grouping has the
   effect of forcing variables within a given group to share a common
@@ -132,10 +133,11 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
      \item{gnet.path}{gnet path scaled in terms of the original x.}
      \item{gnet.obj}{gnet object (a lars-type object).}
      \item{gnet.obj.vars}{Variables (in order) used to calculate the gnet object.}
-     \item{gnet.parms}{Generalized ridge regression parameters used to
-       define the gnet.}
+     \item{gnet.parms}{Generalized ridge regression parameters used to define the gnet.}
      \item{phat}{Estimated model dimension.}
      \item{complexity}{Complexity (regularization) parameter estimates.}
+     \item{ridge}{List containing ridge values used to determine the bma.}
+     \item{models}{List containing the models sampled.}
 }
 \author{
   Hemant Ishwaran (\email{hemant.ishwaran@gmail.com})
@@ -147,7 +149,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
 \references{
   Breiman L. (2001). Random forests, \emph{Machine Learning}, 45:5-32.
 
-  Efron B., Hastie T., Johnstone I., and Tibshirani R. (2004).
+  Efron B., Hastie T., Johnstone I. and Tibshirani R. (2004).
   Least angle regression (with discussion). \emph{Ann. Statist.},
   32:407-499.
 
@@ -165,6 +167,13 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
   Ishwaran H. and Rao J.S. (2010).  Generalized ridge regression:
   geometry and computational solutions when p is larger than n.
 
+  Ishwaran H., Kogalur U.B. and Rao J.S. (2010). spikeslab: prediction
+  and variable selection using spike and slab regression. \emph{R Journal},
+  2(2), 68-73.
+
+  Ishwaran H. and Rao J.S. (2011).  Mixing generalized ridge
+  regressions.
+  
   Zou H. and Hastie T. (2005).  Regularization and variable selection
   via the elastic net.  \emph{J. Royal Statist. Society B},
   67(2):301-320.

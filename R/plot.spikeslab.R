@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.2
+####  SPIKE AND SLAB 1.1.3.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -84,6 +84,12 @@ plot.spikeslab <- function(x, plot.type = c("path", "cv"), breaks = FALSE, ...)
   ### Check that object is compatible
   if (!inherits(x, "spikeslab"))
      stop("This function only works for objects of class `spikeslab'")
+  
+  ###check whether object inherits mixing type
+  ###make suitable alterations to merge mixing results
+  if (sum(inherits(x, c("spikeslab", "mixing"), TRUE) == c(1, 2)) == 2) {
+     x <- x$spikeslab.obj
+  }
 
   ### determine the plot type
   plot.type <- match.arg(plot.type)
@@ -98,7 +104,7 @@ plot.spikeslab <- function(x, plot.type = c("path", "cv"), breaks = FALSE, ...)
     # plot the cv curve
     cv <- x$cv
     cv.plot.path <- x$cv.path
-    model.size <- x$model.size
+    model.size <- unlist(x$gnet.path$model.size)
     K <- length(cv)
     p <- nrow(cv.plot.path) - 1
     cv.plot.mean <- apply(cv.plot.path, 1, mean, na.rm = TRUE)

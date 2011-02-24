@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.2
+####  SPIKE AND SLAB 1.1.3.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -87,6 +87,24 @@ predict.spikeslab <- function(object, newdata = NULL, ...)
   #check that object is compatible
   if (!inherits(object,"spikeslab"))
      stop("This function only works for objects of class `spikeslab'")
+  
+  #check whether object inherits cv type
+  #make suitable alterations to merge mixing results
+  if (sum(inherits(object, c("spikeslab", "cv"), TRUE) == c(1, 2)) == 2) {
+    object <- object$spikeslab.obj
+  }
+  
+  #check whether object inherits mixing type
+  #make suitable alterations to merge mixing results
+  do.mix <- FALSE
+  yhat.mix <- NULL
+  if (sum(inherits(object, c("spikeslab", "mixing"), TRUE) == c(1, 2)) == 2) {
+     grr.mix.scale <- object$grr.mix.scale
+     grr.mix.scale[is.na(grr.mix.scale)] <- 0
+     object <- object$spikeslab.obj
+     do.mix <- TRUE
+  }
+  
   #check for newdata
   if (is.null(newdata)) {
     newdata <- object$x
@@ -167,10 +185,16 @@ predict.spikeslab <- function(object, newdata = NULL, ...)
  yhat.gnet <- c(y.center - sum(gnet.scale * x.center) + x.new %*% gnet.scale)
  yhat.gnet.path <- apply(gnet.path, 1, function(sbeta) {
                          c(y.center - sum(sbeta * x.center) + x.new %*% sbeta)})
-   
+ if (do.mix) {
+   yhat.mix <- c(y.center - sum(grr.mix.scale * x.center) + x.new %*% grr.mix.scale)
+ }
+
  ### --------------------------------------------------------------
  #### return the goodies
 
- return(list(yhat.bma = yhat.bma, yhat.gnet = yhat.gnet, yhat.gnet.path = yhat.gnet.path))
+ return(list(yhat.bma = yhat.bma,
+             yhat.gnet = yhat.gnet,
+             yhat.mix = yhat.mix,
+             yhat.gnet.path = yhat.gnet.path))
 
 }

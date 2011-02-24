@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.2
+####  SPIKE AND SLAB 1.1.3.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -143,7 +143,7 @@ if (is.na(match("formula",names(mf)))) {
   mt <- NULL
 }
 else {
- m <- match(c("formula", "data"),names(mf),0)
+ m <- match(c("formula", "data"), names(mf), 0)
  mf <- mf[c(1, m)]
  mf$drop.unused.levels <- T
  mf[[1]] <- as.name("model.frame")
@@ -255,10 +255,10 @@ row.names(X.wrk) <- colnames(X.wrk) <- NULL
 if (mse) {
   if (verbose) {
     if (n.cov <= n.data) {
-      cat("\n", "\t Pre-processing data... \n")
+      cat("\n", "\t pre-processing data... \n")
     }
     else {
-      cat("\n", "\t Pre-processing data (p is bigger than n, *consider* using 'bigp.smalln')... \n")
+      cat("\n", "\t pre-processing data (p is bigger than n, *consider* using 'bigp.smalln=TRUE')... \n")
     }
   }
   if ((n.data - n.cov)  > min.df.mse) {
@@ -284,7 +284,7 @@ else {
 ###
 ### --------------------------------------------------------------
 
-  if (verbose) cat("\t Running spike and slab regression...\n")
+  if (verbose) cat("\t running spike and slab regression...\n")
 
   ### ---------------------------------
   ### Rescaled Y, XX, XY 
@@ -295,6 +295,7 @@ else {
   sum.xy.wrk <- t(X.wrk)%*%Y.wrk
 
   nozap.pt <- 1:n.cov
+  hyperv <- model <- NULL
 
   ### ---------------------------------
   ### Call core Gibbs routine:
@@ -353,7 +354,7 @@ else {
     }
     ### core Gibbs call with complexity reduced space
     ### for big p small n, invoke fast variable screening
-    b.m <- b.gamma <- rep(0, n.cov)
+    b.m <- rep(0, n.cov)
     if (length(nozap.pt) > 0) {
       if (bigp.smalln)  {
         XX.wrk.reduced <- XX.multiply(as.matrix(X.wrk[, nozap.pt]), FALSE)
@@ -372,8 +373,15 @@ else {
           turn.sigma.on=turn.sigma.on,
           r.eff=r.eff)
       b.m[nozap.pt] <-  gibbs$b.m
-      b.gamma[nozap.pt] <-  gibbs$b.gamma
       complexity.vec <-  gibbs$complexity.vec
+      hyperv <-  lapply(1:length(gibbs$hyperv), function(i) {
+        hyperv.i <- rep(Inf, n.cov)
+        hyperv.i[nozap.pt] <- gibbs$hyperv[[i]]
+        hyperv.i
+      })
+      model <-  lapply(1:length(gibbs$model), function(i) {
+        nozap.pt[gibbs$model[[i]]]
+      })
       if (turn.sigma.on) mse.hat <- mean(gibbs$sigma.vec, na.rm=T)
     }
     b.m[is.na(b.m)] <- 0  #remove NA's from the bma (rare)
@@ -398,9 +406,10 @@ else {
                 seed=seed, verbose=(verbose),
                 bigp.smalln=bigp.smalln, turn.sigma.on=turn.sigma.on, r.eff=r.eff)
     b.m <- gibbs$b.m
-    b.m[is.na(b.m)] <- 0  #remove NA's from the bma (rare)
-    b.gamma <- gibbs$b.gamma
+    b.m[is.na(b.m)] <- 0  #remove NA's from the bma (rare)    
     complexity.vec <- gibbs$complexity.vec
+    hyperv <- gibbs$hyperv
+    model <- gibbs$model
     if (turn.sigma.on) mse.hat <- mean(gibbs$sigma.vec, na.rm=T)
     phat.bma <- min(sum(abs(b.m) > eps, na.rm = TRUE), max.var, na.rm=T)
     resid <- (sum.xy.wrk - XX.wrk %*% b.m)
@@ -416,8 +425,6 @@ else {
   b.m <- b.m/sf
   b.m[is.na(b.m)] <- 0
   bma <- b.m
-  #hyperv not used: UNCOMMENT IF YOU WANT THIS
-  #hyperv <- b.gamma    
   bma.scale <- bma/X.org.sd
   bma.scale[X.org.sd==0] <- NA
   if (is.na(phat.bma)) phat.bma <- 0
@@ -427,14 +434,14 @@ else {
   # Order variables using the bma
   # Track the ordered variables used to fit the gnet
 
-   if (verbose) cat("\t primary loop completed... \r")
-   o.r <- order(abs(bma), decreasing = TRUE)
-   if (phat.bma > 0) {
-     gnet.obj.vars <- o.r[1:phat.bma]
-   }
-   else {
-     gnet.obj.vars <- NULL
-   }
+  if (verbose) cat("\t primary loop completed... \r")
+  o.r <- order(abs(bma), decreasing = TRUE)
+  if (phat.bma > 0) {
+    gnet.obj.vars <- o.r[1:phat.bma]
+  }
+  else {
+    gnet.obj.vars <- NULL
+  }
 
 ### --------------------------------------------------------------
 ###
@@ -445,7 +452,7 @@ else {
 ###
 ### --------------------------------------------------------------
 
-if (verbose) cat("\t using generalized enet to select variables...                \r")
+if (verbose) cat("\t generalized elastic net (gnet) variable selection...                \r")
 if (length(nozap.pt) > 0) {
   penal.constant <- mean(abs(resid[nozap.pt]), na.rm = TRUE)
   penal <-  (sqrt(n.data) * abs(penal))  / penal.constant
@@ -574,7 +581,9 @@ out <- list(
        gnet.obj.vars=gnet.obj.vars,            #variables (in order) used to define gnet
        gnet.parms=penal,                       #grr parameters used to define gnet
        phat=phat,                              #estimated dimension
-       complexity=complexity.vec               #complexity estimates
+       complexity=complexity.vec,              #complexity estimates
+       ridge=hyperv,                           #gamma hypervariance
+       model=model                             #list of models sampled (can be NULL)
        )
 
 class(out) <- "spikeslab"

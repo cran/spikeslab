@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.2
+####  SPIKE AND SLAB 1.1.3.1
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -251,9 +251,9 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
   #dimensions; vectors; arrays
   n.cov <- ncol(X)
   n.data <- length(Y)
-  b.m <- b.gamma <- b.percent <- n.sample <- 0
-  complexity.vec <- lambda.vec <- sigma.vec <- ll.vec <- rep(0, n.iter2)
-
+  b.m <- b.percent <- n.sample <- 0
+  complexity.vec <- lambda.vec <- sigma.vec <- rep(0, n.iter2)
+  b.gamma <- model <- vector("list", n.iter2)
   
   #hyperparameters
   if (orthogonal) V.small <- 1e-5 else V.small <- 5e-3
@@ -437,7 +437,7 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
           #suffices to scale betas by sqrt(W_p)
           if (!is.null(Wts)) {
             beta.temp <- beta
-            beta <- sqrt(Wts)*beta
+            beta <- sqrt(Wts) * beta
           }
 
           if (prior != "bimodal") {
@@ -593,11 +593,11 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
 
         if (turn.sigma.on) {
           if (is.null(sf)) {
-             sigma <- n.data*(s.scl+sum((Y-(X%*%beta))^2)/(2*n.data))/
+             sigma <- n.data * (s.scl+sum((Y-(X%*%beta))^2)/(2*n.data)) /
 	                     rgamma(1,s.shp+n.data/2)
           }
           else {
-             sigma <- n.data*(s.scl+sum((Y/sf-(X%*%beta))^2)/(2*n.data))/
+             sigma <- n.data * (s.scl+sum((Y/sf-(X%*%beta))^2)/(2*n.data)) /
 	                     rgamma(1,s.shp+n.data/2)
           }
         }
@@ -616,11 +616,14 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
           }
         }
         if (i>n.iter1){
-          n.sample <- n.sample+1
-	  b.m <- b.m+beta.sparse
-          b.gamma <- b.gamma+hypervariance
-          b.percent <- b.percent + 1*(rho != V.small)
+          n.sample <- n.sample + 1
+	  b.m <- b.m + beta.sparse
+          b.percent <- b.percent + 1 * (rho != V.small)
 	  complexity.vec[n.sample] <- complexity
+          if (!bigp.smalln) {
+            b.gamma[[n.sample]] <- sigma  / hypervariance
+            model[[n.sample]] <- intersect(which(rho != V.small), which(beta.sparse != 0))
+          }
           ### f/r effects complexities
           if (!is.null(r.eff)) {
             if (is.null(f.eff)) {
@@ -632,9 +635,6 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
           }
           lambda.vec[n.sample] <- lambda
           sigma.vec[n.sample] <- sigma/n.data
-          if (!is.null(sf)) {
-            ll.vec[n.sample] <- sum((Y-(X%*%beta)*sf)^2)/n.data+sum((beta*sf)^2/hypervariance)
-          }
           m.size <- sum(rho != V.small)
 	  if (i%%50==0 & verbose) {
             cat("                                                                                    \r")
@@ -662,12 +662,12 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
 
   out <- list(
        b.m=b.m/n.sample,
-       b.gamma=b.gamma/n.sample,
        b.percent=b.percent/n.sample,
        complexity.vec=complexity.vec,
        lambda.vec=lambda.vec,
        sigma.vec=sigma.vec,
-       ll.vec=ll.vec)
+       hyperv=b.gamma,
+       model=model)
 
   return(out)
   

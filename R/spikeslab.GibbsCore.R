@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.3.1
+####  SPIKE AND SLAB 1.1.4
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -82,12 +82,14 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
                          orthogonal, prior,
                          fast, beta.blocks,
                          X, Y, XX, sum.xy,
-                         seed, verbose=F,
+                         seed,
+                         verbose=FALSE,
                          bigp.smalln=FALSE,
                          turn.sigma.on=FALSE,
                          correlation.filter=FALSE,
                          r.eff=NULL,
-                         sf=NULL, Wts=NULL,
+                         sf= NULL,
+                         Wts=NULL,
                          ...)
 {
   
@@ -110,7 +112,7 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
   zap.hypervariance.harsh <- 10 #strong enforcity threshold
   factor.bigp.smalln <- 2       #big p small n factor for deciding beta.block
   n.perm <- 10                  #no. permutations for null correlation 
-
+  sparse.tolerance <- 1e-3      #complexity tolerance for numerical stability
   
   ### --------------------------------------------------------------
   ### internal functions
@@ -193,47 +195,48 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
     A <- as.matrix(A[, which.nozap])
     G <- G[which.nozap]
     p.temp <- ncol(A)
-    if (p.temp < n*factor.bigp.smalln) {#use blocked sampling
-      XX.temp <- as.matrix(t(A)%*%A)
-      sum.xy.temp <- as.matrix(t(A)%*%y)
+    if ((p.temp < n * factor.bigp.smalln) & sim) {#use blocked sampling
+      XX.temp <- as.matrix(t(A) %*% A)
+      sum.xy.temp <- as.matrix(t(A) %*% y)
       b.return <- rep(0, p)
-      if (sim) {
-        b.return[which.nozap] <- beta.update(beta[which.nozap], XX.temp, sum.xy.temp, G, sigma, fast=TRUE)
-      }
-      else {
-        qr.var <- qr(XX.temp, tol = qr.tol)
-        b.return[which.nozap] <- qr.coef(qr.var, sum.xy.temp/sigma)
-      }
+      b.return[which.nozap] <- beta.update(beta[which.nozap], XX.temp, sum.xy.temp, G, sigma, fast = TRUE)
       return(b.return)   
     }
-    else {# use svd trick
+    else {
+      # svd trick: proceed with caution when dealing with small eigenvalues
+      # do !!NOT!! use matrix multiplication unless essential (see A.new as an example)
       post.multiply <- pre.multiply <- sqrt(G)
-      A.new <- as.matrix(t(t(A)*pre.multiply))#!!do not use matrix multiplication
+      A.new <- as.matrix(t(t(A) * pre.multiply))
       A.svd <- svd(as.matrix(A.new))
       D <- A.svd$d
-      D[D < min.eigenv.tol] <- min.eigenv.tol
-      D.inv.l <- 1/(D^2+sigma)
-      R <- t(t(A.svd$u)*D)
+#      D[D < min.eigenv.tol] <- min.eigenv.tol
+#      D.inv.l <- 1/(D^2+sigma)
+#      R <- t(t(A.svd$u)*D)
+#      RY <- t(R) %*% y
+      D.inv <- D/(D^2 + sigma)
+      S.inv <- 1/(D^2 + sigma)
+      D.inv[D < min.eigenv.tol] <- 0
+      S.inv[D < min.eigenv.tol] <- 0
       V <- A.svd$v
-      RY <- t(R)%*%y
-      beta.c.mean <- V%*%(D.inv.l*RY)
-      if (sim) Z.transform <- sqrt(D.inv.l)*rnorm(n) 
+      RU <- t(A.svd$u) %*% y
+      beta.c.mean <- V %*% (D.inv * RU)
+      if (sim) Z.transform <- sqrt(S.inv) * rnorm(n) 
       if (correlation.filter) {
         b.return <- rep(0, p)
         if (sim) {
-          b.return[which.nozap] <- post.multiply*(beta.c.mean + sqrt(sigma)*(V%*%Z.transform))
+          b.return[which.nozap] <- post.multiply * (beta.c.mean + sqrt(sigma) * (V %*% Z.transform))
         }
         else {
-          b.return[which.nozap] <- post.multiply*(beta.c.mean)
+          b.return[which.nozap] <- post.multiply * (beta.c.mean)
         }
         b.return
       }
       else {
         if (sim) {
-          post.multiply*(beta.c.mean + sqrt(sigma)*(V%*%Z.transform))
+          post.multiply * (beta.c.mean + sqrt(sigma) * (V %*% Z.transform))
         }
         else {
-          post.multiply*(beta.c.mean)
+          post.multiply * (beta.c.mean)
         }
       }
     }
@@ -383,19 +386,10 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
         }
         
         #save sparse beta
-        #computed differently (sparser) if fixed effects are present
         if (i > n.iter1) {
-#          if (is.null(f.eff)) {
             if (bigp.smalln) zap.hvar <- zap.hypervariance.harsh else zap.hvar <- zap.hypervariance
             hv.pt <- (hypervariance > zap.hvar)
             hvar <- hypervariance
-#       UNCOMMENT THE FOLLOWING LINES FOR SPECIAL TREATMENT OF FIXED EFFECTS            
-#          }
-#          else {#fixed effects
-#            if (is.null(dim(XX))) diag.xx <- rep(TRUE, n.cov) else diag.xx <- (diag(XX) != 0)
-#            hv.pt <- ((hypervariance > zap.hypervariance.harsh) & diag.xx)
-#            hvar <- rep(1e50, n.cov)
-#         }
           if (orthogonal & bigp.smalln) {
             beta.sparse <- beta
             beta.sparse[!hv.pt] <- 0
@@ -512,7 +506,7 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
                           seed=as.integer(seed))
               tau[r.eff.k] <- spikeSlabVar$W
               rho[r.eff.k] <- spikeSlabVar$V
-              seed       <- spikeSlabVar$seed
+              seed <- spikeSlabVar$seed
               if (correlation.filter) {#cor.xy filter details
                 hypervariance[r.eff.k] <- tau[r.eff.k]*rho[r.eff.k]*spikeSlabVar$V.extra
               }
@@ -540,7 +534,7 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
                           seed=as.integer(seed))
             tau[f.eff] <- spikeSlabVar$W
             rho[f.eff] <- spikeSlabVar$V
-            seed       <- spikeSlabVar$seed
+            seed <- spikeSlabVar$seed
             if (correlation.filter) {#cor.xy filter details
                 hypervariance[f.eff] <- tau[f.eff]*rho[f.eff]*spikeSlabVar$V.extra
             }
@@ -554,28 +548,27 @@ spikeslab.GibbsCore <- function(n.iter1, n.iter2,
 
         ### ---------------------------------	
         # sample complexity
-        # sparse prior for bigp small n
 
         if (is.null(r.eff)) {
-          complexity <- rbeta(1,(1 + sum(1*(rho != V.small))), (1+sum(1*(rho == V.small))))
-          if (1-complexity<1e-3) complexity <- 1-1e-3 #numerical issue
-          if (complexity<1e-3)   complexity <- 1e-3   #numerical issue
+          complexity <- rbeta(1,(1 + sum(1*(rho != V.small))), (1 + sum(1*(rho == V.small))))
+          if (1 - complexity < sparse.tolerance) complexity <- 1 - sparse.tolerance
+          if (complexity < sparse.tolerance) complexity <- sparse.tolerance
         }
         else {
           for (k in 1:length(r.eff)) {
             rho.k <- rho[r.eff[[k]]]
-            complexity.k <- complexity.reff[k] <- rbeta(1,(1+sum(1*(rho.k != V.small))),
-                                                        (1+sum(1*(rho.k == V.small))))
-            if (1-complexity.k<1e-3) complexity.k <- 1-1e-3 #numerical issue
-            if (complexity.k<1e-6)   complexity.k <- 1e-6   #numerical issue
+            complexity.k <- complexity.reff[k] <- rbeta(1,(1 + sum(1*(rho.k != V.small))),
+                                                        (1 + sum(1*(rho.k == V.small))))
+            if (1 - complexity.k < sparse.tolerance) complexity.k <- 1 - sparse.tolerance
+            if (complexity.k < sparse.tolerance) complexity.k <- sparse.tolerance
             complexity.reff[k] <- complexity.k
           }
           if (!is.null(f.eff)) {
             rho.k <- rho[f.eff]
             complexity.feff <- rbeta(1,(1+sum(1*(rho.k != V.small))),
                                                        (1+sum(1*(rho.k == V.small))))
-            if (1-complexity.feff<1e-3) complexity.feff <- 1-1e-3 #numerical issue
-            if (complexity.feff<1e-6)   complexity.feff <- 1e-6   #numerical issue
+            if (1 - complexity.feff < sparse.tolerance) complexity.feff <- 1 - sparse.tolerance
+            if (complexity.feff < sparse.tolerance) complexity.feff <- sparse.tolerance
           }
         }
 

@@ -1,7 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.3.1
+####  SPIKE AND SLAB 1.1.4
 ####
 ####  Copyright 2010, Cleveland Clinic Foundation
 ####
@@ -251,7 +251,10 @@ if (nrow(primary.gnet.path) < (p + 1)) {
 }
 
 primary.gnet.cv <- cv.plot.mean
-primary.gnet.scale <- primary.gnet.path[which(primary.gnet.cv == min(primary.gnet.cv, na.rm = TRUE))[1], ]
+#in rare cases the full data gnet may have a smaller path than the cv-gnet paths
+which.best.path <- min(which(primary.gnet.cv == min(primary.gnet.cv, na.rm = TRUE))[1],
+                   1 + sum(abs(primary.obj$bma) > .Machine$double.eps))
+primary.gnet.scale <- primary.gnet.path[which.best.path, ]
 primary.gnet <- primary.gnet.scale * primary.obj$x.scale
 primary.gnet.path <- list(path = primary.gnet.path, cv = primary.gnet.cv, model.size = model.size)
 primary.obj$gnet <- primary.gnet
@@ -290,16 +293,11 @@ get.model.size <- function(mn, se) {
   ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
   mn.upper <- mn[ms.upper]
   ms.range <- which((mn + se >= mn.upper) & (mn - se <= mn.upper))
-  ms.lower <- min(ms.range)
+  ms.lower <- min(ms.range, na.rm = TRUE)
+  if (is.infinite(ms.lower)) ms.lower <- ms.upper
   ms.all <- unique(c(ms.lower, ms.upper))
   if (length(ms.all) == 1) return(ms.all)
   paste("[", ms.lower, ",", ms.upper, "]", sep = "")
-}
-get.lower.model.size <- function(mn, se) {
-  ms.upper <- min(which(mn == min(mn, na.rm = TRUE)))
-  mn.upper <- mn[ms.upper]
-  ms.range <- which((mn + se >= mn.upper) & (mn - se <= mn.upper))
-  min(ms.range, na.rm = TRUE)
 }
 
 verbose.list <- list(
@@ -315,7 +313,7 @@ verbose.list <- list(
   c(paste(round(mean(cv, na.rm = TRUE), 3) , "+/-",
     round(sd(cv, na.rm = TRUE)/sqrt(K), 3))),
   c(get.model.size(cv.plot.mean, cv.plot.se)),
-  c(sum(abs(primary.gnet) > .Machine$double.eps))
+  c(sum(abs(primary.gnet) > .Machine$double.eps, na.rm = TRUE))
 )
 
 if (verbose) {

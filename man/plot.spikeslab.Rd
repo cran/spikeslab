@@ -23,7 +23,7 @@
   
   J. Sunil Rao (\email{rao.jsunil@gmail.com})
   
-  Udaya B. Kogalur (\email{kogalurshear@gmail.com})
+  Udaya B. Kogalur (\email{ubk@kogalur.com})
 }
 \references{
   Efron B., Hastie T., Johnstone I., and Tibshirani R. (2004).

@@ -7,7 +7,7 @@
   stability index for each variable.
 }
 \usage{
-cv.spikeslab(x = NULL, y = NULL, K = 10, parallel = FALSE, 
+cv.spikeslab(x = NULL, y = NULL, K = 10,
     plot.it = TRUE, n.iter1 = 500, n.iter2 = 500, mse = TRUE,
     bigp.smalln = FALSE, bigp.smalln.factor = 1, screen = (bigp.smalln),
     r.effects = NULL, max.var = 500, center = TRUE, intercept = TRUE,
@@ -18,18 +18,6 @@ cv.spikeslab(x = NULL, y = NULL, K = 10, parallel = FALSE,
     \item{x}{x-predictor matrix.}
     \item{y}{y-response values.}
     \item{K}{Number of folds.}
-    \item{parallel}{Indicates whether computations should be performed
-      using parallel processing.  Parallel processing is implemented via
-      the package \code{snow}.  This package should be loaded prior to
-      calling \code{cv.spikeslab}.  When not set to FALSE, the variable
-      should indicate the number of parallel threads the user desires to
-      create.  Currently, parallel execution is limited to socket
-      clusters on the local machine on which the R session is being
-      initiated.  Thus, a machine with 4 CPU's will allow one thread to
-      be dedicated to each CPU by setting \code{parallel} to 4.  Setting
-      \code{parallel} to a number greater than the number of CPU's on
-      the machine is not recommended as this will not increase
-      performance.  The default number of parallel threads is 2.}
     \item{plot.it}{If TRUE, plots the mean prediction error and its standard error.}
     \item{n.iter1}{Number of burn-in Gibbs sampled values (i.e., discarded values).}
     \item{n.iter2}{Number of Gibbs sampled values, following burn-in.}
@@ -82,7 +70,7 @@ cv.spikeslab(x = NULL, y = NULL, K = 10, parallel = FALSE,
 
   J. Sunil Rao (\email{rao.jsunil@gmail.com})
 
-  Udaya B. Kogalur (\email{kogalurshear@gmail.com})
+  Udaya B. Kogalur (\email{ubk@kogalur.com})
 }
 \references{
   Ishwaran H. and Rao J.S. (2005a).  Spike and slab variable selection:

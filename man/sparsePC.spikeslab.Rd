@@ -55,7 +55,7 @@ sparsePC.spikeslab(x = NULL, y = NULL, n.rep = 10,
   
   J. Sunil Rao (\email{rao.jsunil@gmail.com})
   
-  Udaya B. Kogalur (\email{kogalurshear@gmail.com})
+  Udaya B. Kogalur (\email{ubk@kogalur.com})
 }
 \references{
   Ishwaran H. and Rao J.S. (2009).  Generalized ridge regression:

@@ -1,9 +1,9 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.4
+####  SPIKE AND SLAB 1.1.5
 ####
-####  Copyright 2010, Cleveland Clinic Foundation
+####  Copyright 2013, Cleveland Clinic Foundation
 ####
 ####  This program is free software; you can redistribute it and/or
 ####  modify it under the terms of the GNU General Public License
@@ -21,58 +21,39 @@
 ####  Boston, MA  02110-1301, USA.
 ####
 ####  ----------------------------------------------------------------
-####  Project Partially Funded By:
-####    --------------------------------------------------------------
-####    National Science Foundation, Grants DMS-0705037, DMS-0405675 and DMS-0405072
-####
-####    Hemant Ishwaran, Ph.D.
-####    Dept of Quantitative Health Sciences/Wb4
-####    Cleveland Clinic Foundation
-####    9500 Euclid Avenue
-####    Cleveland, OH 44195
-####
-####    email:  hemant.ishwaran@gmail.com
-####    phone:  216-444-9932
-####    URL:    www.bio.ri.ccf.org/Resume/Pages/Ishwaran/ishwaran.html
-####
-####
-####	J. Sunil Rao, Ph.D.
-####    Deparment of Biostatistics
-####    University of Miami
-####
-####    email: rao.jsunil@gmail.com
-####
-####    --------------------------------------------------------------
-####    Case Western Reserve University/Cleveland Clinic  
-####    CTSA Grant:  XX1 RR000000, National Center for
-####    Research Resources (NCRR), NIH
-####
+####  Written and Developed by:
 ####  ----------------------------------------------------------------
-####  Written by:
-####    --------------------------------------------------------------
 ####    Hemant Ishwaran, Ph.D.
-####    Dept of Quantitative Health Sciences/Wb4
-####    Cleveland Clinic Foundation
-####    9500 Euclid Avenue
-####    Cleveland, OH 44195
+####    Director of Statistical Methodology
+####    Professor, Division of Biostatistics
+####    Clinical Research Building, Room 1058
+####    1120 NW 14th Street
+####    University of Miami, Miami FL 33136
 ####
 ####    email:  hemant.ishwaran@gmail.com
-####    phone:  216-444-9932
-####    URL:    www.bio.ri.ccf.org/Resume/Pages/Ishwaran/ishwaran.html
-####
+####    URL:    http://web.ccs.miami.edu/~hishwaran
+####    --------------------------------------------------------------
+####    J. Sunil Rao, Ph. D.
+####    Professor and Director of the Division of Biostatistics, 
+####    Department of Epidemiology & Public Health
+####    Clinical Research Bldg, R-669
+####    1120 NW 14th Street, Room 1056
+####    Miami, FL 33136
+####    email:  rao.jsunil@gmail.com
+####    URL:    http://biostat.med.miami.edu/people/primary-faculty/sunil-rao
 ####  ----------------------------------------------------------------
 ####  Maintained by:
 ####    Udaya B. Kogalur, Ph.D.
-####    Dept of Quantitative Health Sciences/Wb4
+####    Adjunct Staff
+####    Dept of Quantitative Health Sciences
 ####    Cleveland Clinic Foundation
 ####    
-####    Kogalur Shear Corporation
+####    Kogalur & Company, Inc.
 ####    5425 Nestleway Drive, Suite L1
 ####    Clemmons, NC 27012
 ####
-####    email:  kogalurshear@gmail.com
-####    phone:  919-824-9825
-####    URL:    www.kogalur-shear.com
+####    email:  ubk@kogalur.com
+####    URL:    http://www.kogalur.com
 ####    --------------------------------------------------------------
 ####
 ####**********************************************************************
@@ -82,7 +63,6 @@ cv.spikeslab <- function(
  x=NULL,              #x matrix
  y=NULL,              #y response
  K=10,                #K-fold
- parallel=FALSE,      #parallel processing via snow
  plot.it=TRUE,        #plot cv
  n.iter1=500,         #no. burn-in samples
  n.iter2=500,         #no. Gibbs sampled values (following burn-in)
@@ -171,33 +151,7 @@ eval.fold <- function(k, ...) {
   }
 }
 
-## determine if parallel processing is to be done.
-if (parallel) {
- if (!require(snow, quietly = TRUE)) {
-     warning("package 'snow' not found, i.e., parallel processing was not performed")
-     eval.fold.obj <- lapply(1:(K+1), eval.fold, ...)
-  }   
-  else {
-    ## The default number of threads is two (2).
-    if (parallel == TRUE) {
-      parallel <- 2
-    }
-    cl <- makeSOCKcluster(rep("localhost", as.integer(parallel))) 
-
-    test <-  list(x, y, n.iter1, n.iter2, mse, bigp.smalln, bigp.smalln.factor,
-                  screen, r.effects, max.var, center, intercept,
-                  fast, beta.blocks, verbose, ntree, seed, all.folds)
-
-    temp <- clusterEvalQ(cl, library(spikeslab))
-    
-    eval.fold.obj <- clusterApplyLB(cl, 1:(K+1), eval.fold, test)
-
-    stopCluster(cl)
-  }
-}
-else {
-  eval.fold.obj <- lapply(1:(K+1), eval.fold, ...)
-}
+eval.fold.obj <- mclapply(1:(K+1), eval.fold, ...)
 
 ## extract the primary object
 primary.obj <- eval.fold.obj[[K+1]]$obj

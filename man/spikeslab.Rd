@@ -144,7 +144,7 @@ spikeslab(formula, data = NULL, x = NULL, y = NULL,
 
   J. Sunil Rao (\email{rao.jsunil@gmail.com})
 
-  Udaya B. Kogalur (\email{kogalurshear@gmail.com})
+  Udaya B. Kogalur (\email{ubk@kogalur.com})
 }
 \references{
   Breiman L. (2001). Random forests, \emph{Machine Learning}, 45:5-32.

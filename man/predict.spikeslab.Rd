@@ -26,7 +26,7 @@
   
   J. Sunil Rao (\email{rao.jsunil@gmail.com})
   
-  Udaya B. Kogalur (\email{kogalurshear@gmail.com})
+  Udaya B. Kogalur (\email{ubk@kogalur.com})
 }
 \references{
   Ishwaran H. and Rao J.S. (2003).  Detecting differentially expressed

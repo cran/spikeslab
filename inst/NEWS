@@ -1,11 +1,14 @@
 Package: spikeslab
-Version: 1.1.4
-BUILD: bld20110401
+Version: 1.1.5
+BUILD: bld20130417
+
+---------------------------------------------------------------------------------
+CHANGES TO RELEASE 1.1.5
+
+o CRAN compliance update.
 
 ---------------------------------------------------------------------------------
 CHANGES TO RELEASE 1.1.4
-
-RELEASE 1.1.4 is a minor upgrade of the product and will not affect most users.
 
 o This build corrects a long-standing numerical issue with the BMA
 that can occur under certain atypical settings"
@@ -13,15 +16,11 @@ that can occur under certain atypical settings"
 ---------------------------------------------------------------------------------
 CHANGES TO RELEASE 1.1.3
 
-RELEASE 1.1.3 is a minor upgrade of the product and will not affect most users.
-
 o improved interconnectivity between user functions.  Enhancements to cv.spikeslab.
 o compression of data files.
 
 ---------------------------------------------------------------------------------
 CHANGES TO 1.1.2
-
-RELEASE 1.1.2 is a minor upgrade of the product and will not affect most users.
 
 o minor fixes to R-side wrapper, adjustments to packaging, and documentation.
 
@@ -38,21 +37,15 @@ cores on the local machine.
 ---------------------------------------------------------------------------------
 CHANGES TO RELEASE 1.0.3
 
-RELEASE 1.0.3 is a minor upgrade of the product and will not affect most users.
-
 o minor fixes to R-side wrapper, adjustments to packaging, and documentation.
 
 ---------------------------------------------------------------------------------
 CHANGES TO RELEASE 1.0.2
 
-RELEASE 1.0.2 is a minor upgrade of the product and will not affect most users.
-
 o minor adjustments to packaging
 
 ---------------------------------------------------------------------------------
 CHANGES TO RELEASE 1.0.1
-
-RELEASE 1.0.1 is a minor upgrade of the product and will not affect most users.
 
 o minor adjustments to the R-side wrappers and documentation
 

@@ -1,9 +1,9 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.4
+####  SPIKE AND SLAB 1.1.5
 ####
-####  Copyright 2010, Cleveland Clinic Foundation
+####  Copyright 2013, Cleveland Clinic Foundation
 ####
 ####  This program is free software; you can redistribute it and/or
 ####  modify it under the terms of the GNU General Public License
@@ -21,58 +21,39 @@
 ####  Boston, MA  02110-1301, USA.
 ####
 ####  ----------------------------------------------------------------
-####  Project Partially Funded By:
-####    --------------------------------------------------------------
-####    National Science Foundation, Grants DMS-0705037, DMS-0405675 and DMS-0405072
-####
-####    Hemant Ishwaran, Ph.D.
-####    Dept of Quantitative Health Sciences/Wb4
-####    Cleveland Clinic Foundation
-####    9500 Euclid Avenue
-####    Cleveland, OH 44195
-####
-####    email:  hemant.ishwaran@gmail.com
-####    phone:  216-444-9932
-####    URL:    www.bio.ri.ccf.org/Resume/Pages/Ishwaran/ishwaran.html
-####
-####
-####	J. Sunil Rao, Ph.D.
-####    Deparment of Biostatistics
-####    University of Miami
-####
-####    email: rao.jsunil@gmail.com
-####
-####    --------------------------------------------------------------
-####    Case Western Reserve University/Cleveland Clinic  
-####    CTSA Grant:  XX1 RR000000, National Center for
-####    Research Resources (NCRR), NIH
-####
+####  Written and Developed by:
 ####  ----------------------------------------------------------------
-####  Written by:
-####    --------------------------------------------------------------
 ####    Hemant Ishwaran, Ph.D.
-####    Dept of Quantitative Health Sciences/Wb4
-####    Cleveland Clinic Foundation
-####    9500 Euclid Avenue
-####    Cleveland, OH 44195
+####    Director of Statistical Methodology
+####    Professor, Division of Biostatistics
+####    Clinical Research Building, Room 1058
+####    1120 NW 14th Street
+####    University of Miami, Miami FL 33136
 ####
 ####    email:  hemant.ishwaran@gmail.com
-####    phone:  216-444-9932
-####    URL:    www.bio.ri.ccf.org/Resume/Pages/Ishwaran/ishwaran.html
-####
+####    URL:    http://web.ccs.miami.edu/~hishwaran
+####    --------------------------------------------------------------
+####    J. Sunil Rao, Ph. D.
+####    Professor and Director of the Division of Biostatistics, 
+####    Department of Epidemiology & Public Health
+####    Clinical Research Bldg, R-669
+####    1120 NW 14th Street, Room 1056
+####    Miami, FL 33136
+####    email:  rao.jsunil@gmail.com
+####    URL:    http://biostat.med.miami.edu/people/primary-faculty/sunil-rao
 ####  ----------------------------------------------------------------
 ####  Maintained by:
 ####    Udaya B. Kogalur, Ph.D.
-####    Dept of Quantitative Health Sciences/Wb4
+####    Adjunct Staff
+####    Dept of Quantitative Health Sciences
 ####    Cleveland Clinic Foundation
 ####    
-####    Kogalur Shear Corporation
+####    Kogalur & Company, Inc.
 ####    5425 Nestleway Drive, Suite L1
 ####    Clemmons, NC 27012
 ####
-####    email:  kogalurshear@gmail.com
-####    phone:  919-824-9825
-####    URL:    www.kogalur-shear.com
+####    email:  ubk@kogalur.com
+####    URL:    http://www.kogalur.com
 ####    --------------------------------------------------------------
 ####
 ####**********************************************************************
@@ -162,8 +143,8 @@ get.pc <- function(X, Y, n.prcmp) {
   Y.freq <- tapply(Y, Y, length)
   X <- X[o.r, ]
   #standardize
-  X.mean <-  as.real(c(apply(X, 2, mean.center, center = TRUE)))
-  X.sd <-  as.real(c(apply(X, 2, sd.center, center = TRUE)))
+  X.mean <-  as.double(c(apply(X, 2, mean.center, center = TRUE)))
+  X.sd <-  as.double(c(apply(X, 2, sd.center, center = TRUE)))
   ss.X <- scale(X, center = X.mean, scale = X.sd) 
   #get PC from SVD of X
   pc.out <- svd(ss.X)
@@ -249,14 +230,14 @@ for (k in 1:n.rep) {
                 max.var = max.genes, 
                 bigp.smalln.factor = max(1, round(max.genes/nrow(pc.out$ss.X))),
                 bigp.smalln = (nrow(pc.out$ss.X) < ncol(pc.out$ss.X)))
-    sig.genes.p <- as.real(which(abs(ss.out$gnet) > .Machine$double.eps))
+    sig.genes.p <- as.double(which(abs(ss.out$gnet) > .Machine$double.eps))
     if (length(sig.genes.p) > 0) {
       sig.genes <- c(sig.genes, sig.genes.p)
       signal[sig.genes.p] <- signal[sig.genes.p] + abs(ss.out$gnet)[sig.genes.p]
     }
   }
   if (length(sig.genes) == 0) {
-    sig.genes <- as.real(which(signal == max(signal, na.rm = TRUE)))[1]
+    sig.genes <- as.double(which(signal == max(signal, na.rm = TRUE)))[1]
   }
   sig.genes <- sort(unique(sig.genes))
   
@@ -290,7 +271,7 @@ for (k in 1:n.rep) {
 
 gene.signature.all <- gene.signature
 gene.signature.freq <- tapply(gene.signature, gene.signature, length)
-gene.signature <- as.real(names(gene.signature.freq)[rev(order(gene.signature.freq))][1:mean(dim.results)])
+gene.signature <- as.double(names(gene.signature.freq)[rev(order(gene.signature.freq))][1:mean(dim.results)])
 
 ### ------------------- final forest call ------------------------------
 
@@ -311,7 +292,7 @@ cat("no. genes            :", n.genes, "\n")
 cat("max genes            :", max.genes, "\n")
 cat("no. samples          :", nrow(X), "\n")
 cat("no. classes          :", n.class, "\n")
-cat("class freq           :", as.real(tapply(Y, Y, length)), "\n")
+cat("class freq           :", as.double(tapply(Y, Y, length)), "\n")
 cat("class names          :", levels(Y), "\n")
 cat("replicates           :", n.rep, "\n")
 cat("model size           :", round(mean(dim.results), 4), "+/-", round(sd(dim.results), 4), "\n")

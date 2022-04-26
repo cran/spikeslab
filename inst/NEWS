@@ -1,9 +1,9 @@
 Package: spikeslab
-Version: 1.1.5
-BUILD: bld20130417
+Version: 1.1.6
+BUILD: bld20220426
 
 ---------------------------------------------------------------------------------
-CHANGES TO RELEASE 1.1.5
+CHANGES TO RELEASE 1.1.6
 
 o CRAN compliance update.
 

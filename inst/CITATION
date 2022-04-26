@@ -12,8 +12,8 @@ citEntry(entry="Manual",
 	 publisher = "manual",
          year         = year,
          note         = vers,
-         url          = "http://cran.r-project.org/web/packages/spikeslab/",
-         pdf          = "http://cran.r-project.org/web/packages/spikeslab/spikeslab.pdf",
+         url          = "https://cran.r-project.org/package=spikeslab",
+         pdf          = "https://cran.r-project.org/web/packages/spikeslab/spikeslab.pdf",
          textVersion = 
          paste("Ishwaran H., Rao J.S. and Kogalur U.B. (",year ,"). ", 
                titl, ", ", vers, ".", sep=""))
@@ -27,8 +27,8 @@ citEntry(entry="Article",
          volume       = "33",
          number       = "2",
          pages        = "730--773",
-         url          = "http://arXiv.org/abs/math/0505633v1",
-         pdf          = "http://arxiv.org/pdf/math.ST/0505633",
+         url          = "https://arXiv.org/abs/math/0505633v1",
+         pdf          = "https://arxiv.org/pdf/math.ST/0505633",
 
          textVersion = 
          paste("Ishwaran H. and Rao J.S. (2005). ", 
@@ -37,15 +37,17 @@ citEntry(entry="Article",
                sep=""))
 
 citEntry(entry="Article",
-         title  = "Generalized ridge regression: geometry and computational solutions when p is larger than n",
+         title  = "Geometry and properties of gneralized ridge regression in high dimensions",
          author = personList(person(family="Ishwaran", given="H."),
                              person(family="Rao", given="J.S.")),
-	 journal      = "Manuscript",
-         year         = "2010",
+	 journal      = "Contemporary Mathematics",
+         year         = "2014",
+         volume       = "62",
+         pages        = "82--93",
 
          textVersion = 
          paste("Ishwaran H. and Rao J.S. (2010). ", 
-               "Generalized ridge regression: geometry and computational solutions when p is larger than n.",
-               "Manuscript.",
+               "Geometry and properties of gneralized ridge regression in high dimensions",
+               "Contemp. Math. 62, 82--93.",
                sep=""))
  

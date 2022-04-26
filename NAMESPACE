@@ -1,4 +1,10 @@
-useDynLib(spikeslab)
+useDynLib(spikeslab, .registration = TRUE)
+
+importFrom("parallel", mclapply)
+importFrom("stats", "cor", "median", "sd", "model.matrix", "model.response", "runif", "rnorm", "rbeta",
+           "delete.response", "predict", "rgamma")
+importFrom("graphics", "lines", "matplot", "segments")
+importFrom("utils", "head")
 
 export(spikeslab.news, 
        spikeslab,

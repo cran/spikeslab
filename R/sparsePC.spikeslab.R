@@ -1,9 +1,7 @@
 ####**********************************************************************
 ####**********************************************************************
 ####
-####  SPIKE AND SLAB 1.1.5
-####
-####  Copyright 2013, Cleveland Clinic Foundation
+####  SPIKE AND SLAB 1.1.6
 ####
 ####  This program is free software; you can redistribute it and/or
 ####  modify it under the terms of the GNU General Public License
@@ -23,40 +21,24 @@
 ####  ----------------------------------------------------------------
 ####  Written and Developed by:
 ####  ----------------------------------------------------------------
-####    Hemant Ishwaran, Ph.D.
-####    Director of Statistical Methodology
-####    Professor, Division of Biostatistics
-####    Clinical Research Building, Room 1058
-####    1120 NW 14th Street
-####    University of Miami, Miami FL 33136
+####  Hemant Ishwaran, Ph.D.
+####  Director of Statistical Methodology
+####  Professor, Division of Biostatistics
+####  Clinical Research Building, Room 1058
+####  1120 NW 14th Street
+####  University of Miami, Miami FL 33136
 ####
-####    email:  hemant.ishwaran@gmail.com
-####    URL:    http://web.ccs.miami.edu/~hishwaran
-####    --------------------------------------------------------------
-####    J. Sunil Rao, Ph. D.
-####    Professor and Director of the Division of Biostatistics, 
-####    Department of Epidemiology & Public Health
-####    Clinical Research Bldg, R-669
-####    1120 NW 14th Street, Room 1056
-####    Miami, FL 33136
-####    email:  rao.jsunil@gmail.com
-####    URL:    http://biostat.med.miami.edu/people/primary-faculty/sunil-rao
+####  email:  hemant.ishwaran@gmail.com
+####  URL:    https://ishwaran.org/
 ####  ----------------------------------------------------------------
-####  Maintained by:
-####    Udaya B. Kogalur, Ph.D.
-####    Adjunct Staff
-####    Dept of Quantitative Health Sciences
-####    Cleveland Clinic Foundation
-####    
-####    Kogalur & Company, Inc.
-####    5425 Nestleway Drive, Suite L1
-####    Clemmons, NC 27012
+####  Udaya B. Kogalur, Ph.D.
+####  Principal, Kogalur & Company, Inc.
+####  5425 Nestleway Drive, Suite L
+####  Clemmons, NC 27012
 ####
-####    email:  ubk@kogalur.com
-####    URL:    http://www.kogalur.com
-####    --------------------------------------------------------------
+####  email:  ubk@kogalur.com
+####  --------------------------------------------------------------
 ####
-####**********************************************************************
 ####**********************************************************************
 
 sparsePC <- function(...)
@@ -154,7 +136,7 @@ get.pc <- function(X, Y, n.prcmp) {
   #find pc with most variability across groups using RF-R
   #UD is better choice for "Y" than U
   imp <- apply(UD, 2, function(p){
-     rf.out <- randomForest(cbind(Y), p, importance = TRUE)
+     rf.out <- randomForest::randomForest(cbind(Y), p, importance = TRUE)
      rf.out$importance[1,1]})
   o.r <- order(imp, decreasing = TRUE)
   #sort pc according to RF importance
@@ -249,7 +231,7 @@ for (k in 1:n.rep) {
   colnames(rf.data.x) <- paste("x.", 1:length(sig.genes.k))
   Y.train <- Y[train.pt]
   Y.test <- Y[test.pt]
-  rf.out <- randomForest(x=as.matrix(rf.data.x[train.pt, ]), y=Y.train,
+  rf.out <- randomForest::randomForest(x=as.matrix(rf.data.x[train.pt, ]), y=Y.train,
                    importance = TRUE, ntree=ntree, nodesize=nodesize)
   gene.signature <- c(gene.signature, sig.genes.k)
   dim.results[k] <- length(sig.genes.k)
@@ -278,7 +260,7 @@ gene.signature <- as.double(names(gene.signature.freq)[rev(order(gene.signature.
 if (verbose) cat("growing the forest classifier...\n")
 rf.data.x <- as.matrix(X[, gene.signature])
 colnames(rf.data.x) <- paste("x.", gene.signature)
-rf.out <- randomForest(x=rf.data.x, y=Y, importance = TRUE, ntree=ntree, nodesize=nodesize)
+rf.out <- randomForest::randomForest(x=rf.data.x, y=Y, importance = TRUE, ntree=ntree, nodesize=nodesize)
 
 
 ### ------------------- Output ------------------------------
